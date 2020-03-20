@@ -47,37 +47,60 @@ let register_parser ~lang new_parser =
     end;
   parsers := (lang, new_parser) :: !parsers
 
+let debug_no_parser_for_no_extension () =
+  if verbose() then
+    eprintf
+      "error: no extension found, can't infer input format@."
+
 let debug_no_parser_for_extension s =
   if verbose() then
     eprintf
-      "error: no parser registered for ext %S. Using default lang ...@." s
+      "error: no parser registered for ext %S @." s
 
 let debug_no_parser_for_input_format s =
   if verbose() then
     eprintf
       "error: no parser registered for the provided input format %S ?@." s
 
-let get_parser lang_opt =
-  let i = Options.input_format () in
-  match lang_opt with
-  | Some lang ->
-    begin
-      try List.assoc lang !parsers
-      with Not_found ->
-        debug_no_parser_for_extension lang;
-        try List.assoc i !parsers
-        with Not_found ->
-          debug_no_parser_for_input_format i;
-          exit 1
-    end
+let get_input_parser err_msg =
+  if Options.input_native () then
+    try List.assoc ".ae" !parsers
+    with Not_found ->
+      debug_no_parser_for_input_format "ae";
+      exit 1
+  else if Options.input_smtlib () then
+    try List.assoc ".smt2" !parsers
+    with Not_found ->
+      debug_no_parser_for_input_format "smtlib";
+      exit 1
+  else if Options.input_why3 () then
+    try List.assoc ".why3" !parsers
+    with Not_found ->
+      debug_no_parser_for_input_format "why3";
+      exit 1
+  else begin
+    err_msg ();
+    exit 1
+  end
 
-  | None ->
-    begin
-      try List.assoc i !parsers
-      with Not_found ->
-        debug_no_parser_for_input_format i;
-        exit 1
+let get_parser lang_opt =
+  match lang_opt with
+  | Some lang -> begin
+      if Options.infer_input_format () then
+        try List.assoc lang !parsers
+        with Not_found ->
+          debug_no_parser_for_extension lang;
+          exit 1
+      else
+        get_input_parser
+          (fun () -> (debug_no_parser_for_input_format lang))
     end
+  | None ->
+    if Options.infer_input_format () then begin
+      debug_no_parser_for_no_extension ();
+      exit 1 end
+    else
+      get_input_parser (fun () -> (debug_no_parser_for_no_extension ()))
 
 
 let parse_file ?lang lexbuf =
@@ -132,10 +155,24 @@ let parse_input_file file =
   in
   try
     (if Options.infer_output_format () then
-       match ext with
-       | ".smt2" | ".psmt2" -> Options.set_output_format OSmtlib
-       | ".why" | ".mlw" | ".ae" -> Options.set_output_format ONative
-       | _ -> Format.eprintf "Warning: This extension is not supported@."
+       let ext =
+         try Str.string_after ext 1
+         with Invalid_argument _ -> ext
+       in
+       match Options.match_format ext with
+       | "native" -> Options.set_output_format ONative
+       | "smtlib" -> Options.set_output_format OSmtlib
+       | "why3" -> Options.set_output_format OWhy3
+       (* | "szs" -> Options.set_output_format OSZS *)
+       | _ ->
+         if Options.infer_input_format () then
+           Format.eprintf "Warning: This extension is not supported@."
+         else if Options.input_native () then
+           Options.set_output_format ONative
+         else if Options.input_smtlib () then
+           Options.set_output_format OSmtlib
+         else if Options.input_why3 () then
+           Options.set_output_format OWhy3
     );
     let ext = if String.equal ext "" then None else Some ext in
     let a = parse_file ?lang:ext lb in

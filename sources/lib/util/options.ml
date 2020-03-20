@@ -132,12 +132,15 @@ let vno_backward = ref false
 let vno_sat_learning = ref false
 let vinstantiate_after_backjump = ref false
 let vdisable_weaks = ref false
-let vinput_format = ref "why"
 let vanswers_with_loc = ref true
 
-type output = ONative | OSmtlib | OSZS
+type input = INative | ISmtlib | IWhy3 (* | ISZS *)
+let vinfer_input_format = ref true
+let vinput_format = ref INative
+type output = ONative | OSmtlib | OWhy3 (* | OSZS *)
 let vinfer_output_format = ref true
 let voutput_format = ref ONative
+
 let vinline_lets = ref false
 
 let vreplay = ref false
@@ -148,6 +151,13 @@ let vsave_used_context = ref false
 let vprofiling_period = ref 0.
 let vprofiling = ref false
 
+let match_format f =
+  match f with
+  | "native" | "ae" | "why" | "mlw" -> "native"
+  | "smtlib" | "smt" | "smt2" | "psmt" | "psmt2" -> "smtlib"
+  | "why3" | "Why3" -> "why3"
+  (* | "szs" | "SZS" -> "szs" *)
+  | s -> s
 
 (* We don't want to handle functions with more than 10 arguments so
    we need to split the debug options to gather them in the end.
@@ -229,7 +239,7 @@ type execution_opt =
   {
     answers_with_loc : bool;
     frontend : string;
-    input_format : string;
+    input_format : input;
     parse_only : bool;
     parsers : string list;
     preludes : string list;
@@ -381,7 +391,34 @@ let mk_execution_opt frontend input_format parse_only parsers
     preludes no_locs_in_answers type_only type_smt2
   =
   let answers_with_loc = not no_locs_in_answers in
-  let input_format = "." ^ input_format in
+
+  vinfer_input_format :=
+    (match input_format with Some _ -> false | None -> true);
+  let input_format = match input_format with
+    | None -> INative
+    | Some fmt when match_format fmt = "native" -> INative
+    | Some fmt when match_format fmt = "smtlib" -> ISmtlib
+    | Some fmt when match_format fmt = "why3" ->
+      let why3 = Str.regexp_case_fold "why3" in
+      let found =
+        List.exists (fun parser ->
+            try
+              let _ = Str.search_forward why3 parser 0 in
+              true
+            with Not_found -> false
+          ) parsers
+      in
+      if not found then
+        let m = "Why3 format is only available when AB-Why3 parser is loaded"
+        in
+        raise (Error (false, m));
+      else
+        IWhy3
+    (*     | Some fmt when match_format fmt = "szs" -> ISZS *)
+    | Some fmt ->
+      let m = "Option --input does not accept the argument \"" ^ fmt in
+      raise (Error (false, m))
+  in
   `Ok {answers_with_loc; input_format; parse_only; parsers; frontend;
        type_only; type_smt2; preludes;}
 
@@ -432,9 +469,11 @@ let mk_output_opt interpretation model unsat_core output_format
   vinfer_output_format :=
     (match output_format with Some _ -> false | None -> true);
   let output_format = match output_format with
-    | None | Some "native" -> ONative
-    | Some "smtlib" -> OSmtlib
-    | Some "szs" | Some "OSZS" -> OSZS
+    | None -> ONative
+    | Some fmt when match_format fmt = "native" -> ONative
+    | Some fmt when match_format fmt = "smtlib" -> OSmtlib
+    | Some fmt when match_format fmt = "why3" -> OWhy3
+    (*    | Some fmt when match_format fmt = "szs" -> OSZS *)
     | Some fmt ->
       let m = "Option --output does not accept the argument \"" ^ fmt in
       raise (Error (false, m))
@@ -555,7 +594,10 @@ let mk_opts file case_split_opt context_opt dbg_opt execution_opt _
   (match file with
    | Some f ->
      vfile := f;
-     let base_file = Filename.chop_extension f in
+     let base_file = try
+         Filename.chop_extension f
+       with Invalid_argument _ -> f
+     in
      vsession_file := base_file^".agr";
      vused_context_file := base_file;
    | _ -> ()
@@ -895,8 +937,9 @@ let parse_context_opt =
     Arg.(value & flag & info ["replay"] ~docs ~doc) in
 
   let replay_all_used_context =
-    let doc = "Replay with all axioms and predicates saved in $(i,.used) files \
-               of the current directory." in
+    let doc =
+      "Replay with all axioms and predicates saved in $(i,.used) files \
+       of the current directory." in
     Arg.(value & flag & info ["replay-all-used-context"] ~docs ~doc) in
 
   let replay_used_context =
@@ -923,13 +966,13 @@ let parse_execution_opt =
     Arg.(value & opt string !vfrontend & info ["frontend"] ~docv ~docs ~doc) in
 
   let input_format =
-    let doc =
-      "Set the default input format to $(docv). Useful when the extension \
-       does not allow to automatically select a parser (eg. JS mode, GUI \
-       mode, ...)." in
+    let doc = Format.sprintf
+        "Set the default input format to $(docv) and must be %s. \
+         Useful when the extension does not allow to automatically select \
+         a parser (eg. JS mode, GUI mode, ...)."
+        (Arg.doc_alts ["native"; "smtlib"; "why3"]) in
     let docv = "FMT" in
-    Arg.(value & opt string !vinput_format &
-         info ["i"; "input"] ~docv ~doc) in
+    Arg.(value & opt (some string) None & info ["i"; "input"] ~docv ~doc) in
 
   let parse_only =
     let doc = "Stop after parsing." in
@@ -1635,15 +1678,21 @@ let can_decide_on s =
 
 let no_decisions_on__is_empty () = !vno_decisions_on == Util.SS.empty
 
-let input_format () = !vinput_format
+let input_native ()  = !vinput_format = INative
+let input_smtlib ()  = !vinput_format = ISmtlib
+let input_why3 ()  = !vinput_format = IWhy3
+(* let input_szs ()  = !vinput_format = ISZS *)
+let infer_input_format ()  = !vinfer_input_format
+
 let answers_with_locs ()  = !vanswers_with_loc
 let output_native ()  = !voutput_format = ONative
 let output_smtlib ()  = !voutput_format = OSmtlib
-let output_szs ()  = !voutput_format = OSZS
+let output_why3 ()  = !voutput_format = OWhy3
+(* let output_szs ()  = !voutput_format = OSZS *)
 let infer_output_format ()  = !vinfer_output_format
 let inline_lets () = !vinline_lets
 
-let set_input_format i = vinput_format := "." ^ i
+let set_input_format i = vinput_format := i
 let set_output_format o = voutput_format := o
 
 (** particular getters : functions that are immediately executed **************)
