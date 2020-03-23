@@ -42,27 +42,16 @@ val fmt : Format.formatter
 (** Type used to describe the type of models wanted *)
 type model = MNone | MDefault | MAll | MComplete
 
-(** Type used to describe the type of input wanted by {!val:set_input_format}
-*)
-type input =
-  | INative                     (** Native Alt-Ergo format  *)
-  | ISmtlib
+(** Type used to describe the type of input or output wanted by
+    {!val:set_input_format} and {!val:set_output_format} *)
+type in_out_format =
+  | Native                     (** Native Alt-Ergo format  *)
+  | Smtlib
   (** {{:
       http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf}
       Smtlib} default format *)
-  | IWhy3                       (** Why3 file format *)
-(*   | ISZS                        * Not yet implemented SZS format   *)
-
-(** Type used to describe the type of output wanted by {!val:set_output_format}
-*)
-type output =
-  | ONative                     (** Native Alt-Ergo format  *)
-  | OSmtlib
-  (** {{:
-      http://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf}
-      Smtlib} default format *)
-  | OWhy3                       (** Why3 file format *)
-(*   | OSZS                        * Not yet implemented SZS format   *)
+  | Why3                       (** Why3 file format *)
+(*   | SZS                        * Not yet implemented SZS format   *)
 
 (** {2 Setter functions} *)
 
@@ -171,7 +160,7 @@ val set_greedy : bool -> unit
 val set_inline_lets : bool -> unit
 
 (** Set {!val:input_format} *)
-val set_input_format : input -> unit
+val set_input_format : in_out_format -> unit
 
 (** Set {!val:interpretation}
 
@@ -214,7 +203,7 @@ val set_no_user_triggers : bool -> unit
 val set_normalize_instances : bool -> unit
 
 (** Set {!val:output_format} *)
-val set_output_format : output -> unit
+val set_output_format : in_out_format -> unit
 
 (** Set {!val:parse_only} *)
 val set_parse_only : bool -> unit
@@ -405,22 +394,11 @@ val answers_with_locs  : unit -> bool
 val frontend : unit -> string
 (** Default to [legacy] *)
 
-(** [true] if the input format is set to [Native] *)
-val input_native : unit -> bool
-(** Default to [true] *)
-
-(** [true] if the input format is set to [Smtlib] *)
-val input_smtlib : unit -> bool
-(** Default to [false] *)
-
-(** [true] if the input format is set to [Why3].
-    The AB-Why3 plugins must be use with this input format *)
-val input_why3 : unit -> bool
-(** Default to [false] *)
-
-(** [true] if the input format is set to [SZS] *)
-(* val input_szs : unit -> bool *)
-(** Default to [false] *)
+(** Value specifying the default input format. Useful when the extension
+    does not allow to automatically select a parser (eg. JS mode, GUI
+    mode, ...). *)
+val input_format : unit -> in_out_format
+(** Default to [Native] *)
 
 (** [true] if Alt-Ergo infers automatically the input format according to the
     file extension. *)
