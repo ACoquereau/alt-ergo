@@ -70,7 +70,7 @@ let get_input_parser () =
         debug_no_parser_for_input_format "ae";
         exit 1
     end
-  | Options.Smtlib -> begin
+  | Options.Smtlib2 -> begin
       try List.assoc ".smt2" !parsers
       with Not_found ->
         debug_no_parser_for_input_format "smtlib";
@@ -81,6 +81,10 @@ let get_input_parser () =
       with Not_found ->
         debug_no_parser_for_input_format "why3";
         exit 1
+    end
+  | Options.Unknown s -> begin
+      debug_no_parser_for_input_format s;
+      exit 1
     end
 
 let get_parser lang_opt =
@@ -158,9 +162,9 @@ let parse_input_file file =
          try Str.string_after ext 1
          with Invalid_argument _ -> ext
        in
-       match Options.match_format ext with
+       match Options.match_extension ext with
        | "native" -> Options.set_output_format Native
-       | "smtlib" -> Options.set_output_format Smtlib
+       | "smtlib" -> Options.set_output_format Smtlib2
        | "why3" -> Options.set_output_format Why3
        (* | "szs" -> Options.set_output_format OSZS *)
        | _ ->
@@ -168,12 +172,11 @@ let parse_input_file file =
            Format.eprintf "Warning: This extension is not supported@."
          else
            match Options.input_format () with
-           | Options.Native ->
-             Options.set_output_format Native
-           | Options.Smtlib ->
-             Options.set_output_format Smtlib
-           | Options.Why3 ->
-             Options.set_output_format Why3
+           | Options.Native -> Options.set_output_format Native
+           | Options.Smtlib2 -> Options.set_output_format Smtlib2
+           | Options.Why3 -> Options.set_output_format Why3
+           | Options.Unknown s ->
+             Format.eprintf "Warning: The extension %s is not supported@." s
     );
     let ext = if String.equal ext "" then None else Some ext in
     let a = parse_file ?lang:ext lb in

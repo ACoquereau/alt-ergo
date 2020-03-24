@@ -34,7 +34,8 @@ exception Error of bool * string
 (* Declaration of all the options as refs with default values *)
 
 type model = MNone | MDefault | MAll | MComplete
-type in_out_format = Native | Smtlib | Why3 (* | SZS *)
+type input_format = Native | Smtlib2 | Why3 (* | SZS *) | Unknown of string
+type output_format = Native | Smtlib2 | Why3 (* | SZS *) | Unknown of string
 
 let vtimers = ref false
 
@@ -135,15 +136,23 @@ let vinstantiate_after_backjump = ref false
 let vdisable_weaks = ref false
 let vanswers_with_loc = ref true
 
-(** Alt-Ergo infers automatically the input format according to the
-    file extension and set the corresponding parser. *)
+(* vinfer_input_format controls whether input format
+   should be inferred by alt-ergo.
+   It's set to true by default and set to false when an input format is set.
+   The inference is done at parsing (in parsers.ml) using the extension of the
+   input file and regarding of this extension,
+   the corresponding parser is choosed *)
 let vinfer_input_format = ref true
-let vinput_format = ref Native
+let vinput_format = ref (Native : input_format)
 
-(** Alt-Ergo infers automatically the output format according to the
-    file extension and set the corresponding output format. *)
+(* vinfer_output_format controls whether output format
+   should be inferred by alt-ergo.
+   It's set to true by default and set to false when an outpu format is set.
+   The inference is done at parsing (in parsers.ml) using the extension of the
+   input file and regarding of this extension,
+   the corresponding output_format is choosed *)
 let vinfer_output_format = ref true
-let voutput_format = ref Native
+let voutput_format = ref (Native : output_format)
 
 let vinline_lets = ref false
 
@@ -155,11 +164,27 @@ let vsave_used_context = ref false
 let vprofiling_period = ref 0.
 let vprofiling = ref false
 
-let match_format f =
+let match_input_format f : input_format =
   match f with
-  | "native" | "ae" | "why" | "mlw" -> "native"
-  | "smtlib" | "smt" | "smt2" | "psmt" | "psmt2" -> "smtlib"
-  | "why3" | "Why3" -> "why3"
+  | "native" | "altergo" | "alt-ergo" -> Native
+  | "smtlib2" | "smt-lib2" -> Smtlib2
+  | "why3" -> Why3
+  (* | "szs" | "SZS" -> SZS *)
+  | s -> Unknown(s)
+
+let match_output_format f : output_format =
+  match f with
+  | "native" | "altergo" | "alt-ergo" -> Native
+  | "smtlib2" | "smt-lib2" -> Smtlib2
+  | "why3" -> Why3
+  (* | "szs" | "SZS" -> "szs" *)
+  | s -> Unknown(s)
+
+let match_extension e =
+  match e with
+  | "ae" | "why" | "mlw" -> "native"
+  | "smt2" | "psmt2" -> "smtlib"
+  | "why3" -> "why3"
   (* | "szs" | "SZS" -> "szs" *)
   | s -> s
 
@@ -243,7 +268,7 @@ type execution_opt =
   {
     answers_with_loc : bool;
     frontend : string;
-    input_format : in_out_format;
+    input_format : input_format;
     parse_only : bool;
     parsers : string list;
     preludes : string list;
@@ -272,7 +297,7 @@ type output_opt =
   {
     interpretation : int;
     model : model;
-    output_format : in_out_format;
+    output_format : output_format;
     unsat_core : bool;
   }
 
@@ -398,18 +423,20 @@ let mk_execution_opt frontend input_format parse_only parsers
 
   vinfer_input_format :=
     (match input_format with Some _ -> false | None -> true);
-  let input_format = match input_format with
+  let input_format : input_format = match input_format with
     | None -> Native
-    | Some fmt when match_format fmt = "native" -> Native
-    | Some fmt when match_format fmt = "smtlib" -> Smtlib
-    | Some fmt when match_format fmt = "why3" ->
-      Format.eprintf "[warning] Why3 format is only available when \
-                      AB-Why3 parser is loaded@.";
-      Why3
-    (*     | Some fmt when match_format fmt = "szs" -> SZS *)
     | Some fmt ->
-      let m = "Option --input does not accept the argument \"" ^ fmt in
-      raise (Error (false, m))
+      match match_input_format fmt with
+      | Native -> Native
+      | Smtlib2 -> Smtlib2
+      | Why3 ->
+        Format.eprintf "[warning] Why3 format is only available when \
+                        AB-Why3 parser is loaded@.";
+        Why3
+      (*     | Some fmt when match_format fmt = "szs" -> SZS *)
+      | Unknown f ->
+        let m = "Option --input does not accept the argument \"" ^ f in
+        raise (Error (false, m))
   in
   `Ok {answers_with_loc; input_format; parse_only; parsers; frontend;
        type_only; type_smt2; preludes;}
@@ -460,15 +487,17 @@ let mk_output_opt interpretation model unsat_core output_format
   in
   vinfer_output_format :=
     (match output_format with Some _ -> false | None -> true);
-  let output_format = match output_format with
+  let output_format : output_format = match output_format with
     | None -> Native
-    | Some fmt when match_format fmt = "native" -> Native
-    | Some fmt when match_format fmt = "smtlib" -> Smtlib
-    | Some fmt when match_format fmt = "why3" -> Why3
-    (*    | Some fmt when match_format fmt = "szs" -> OSZS *)
     | Some fmt ->
-      let m = "Option --output does not accept the argument \"" ^ fmt in
-      raise (Error (false, m))
+      match match_output_format fmt with
+      | Native -> Native
+      | Smtlib2 -> Smtlib2
+      | Why3 -> Why3
+      (*    | Some fmt when match_format fmt = "szs" -> OSZS *)
+      | Unknown f ->
+        let m = "Option --output does not accept the argument \"" ^ f in
+        raise (Error (false, m))
   in
   `Ok { interpretation; model; unsat_core; output_format; }
 
@@ -1675,7 +1704,7 @@ let input_format () = !vinput_format
 
 let answers_with_locs ()  = !vanswers_with_loc
 let output_native ()  = !voutput_format = Native
-let output_smtlib ()  = !voutput_format = Smtlib
+let output_smtlib ()  = !voutput_format = Smtlib2
 let output_why3 ()  = !voutput_format = Why3
 (* let output_szs ()  = !voutput_format = SZS *)
 let infer_output_format ()  = !vinfer_output_format
