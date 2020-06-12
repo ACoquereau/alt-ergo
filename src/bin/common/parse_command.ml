@@ -187,15 +187,15 @@ let mk_execution_opt frontend input_format parse_only parsers
     preludes no_locs_in_answers no_colors_in_output no_headers_in_output
     type_only type_smt2
   =
-  let answers_with_loc = not no_locs_in_answers in
+
+  let answers_with_locs = not no_locs_in_answers in
   let output_with_colors = not no_colors_in_output in
   let output_with_headers = not no_headers_in_output in
-  set_infer_input_format input_format;
   let input_format = match input_format with
-    | None -> Native
-    | Some fmt -> fmt
+    | None -> set_infer_input_format true; Native
+    | Some fmt -> set_infer_input_format false; fmt
   in
-  set_answers_with_loc answers_with_loc;
+  set_answers_with_locs answers_with_locs;
   set_output_with_colors output_with_colors;
   set_output_with_headers output_with_headers;
   set_input_format input_format;
@@ -249,10 +249,9 @@ let mk_limit_opt age_bound fm_cross_limit timelimit_interpretation
 
 let mk_output_opt interpretation model unsat_core output_format
   =
-  set_infer_output_format output_format;
   let output_format = match output_format with
-    | None -> Native
-    | Some fmt -> fmt
+    | None -> set_infer_output_format true; Native
+    | Some fmt -> set_infer_output_format false; fmt
   in
   set_interpretation interpretation;
   set_model model;

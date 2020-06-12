@@ -38,10 +38,14 @@ open Connected_ast
 open Format
 open Options
 
-(* done here to initialize options,
+(* done here to initialize parser and options,
    before the instantiations of functors *)
 let () =
-  try Parse_command.parse_cmdline_arguments ()
+  try Parse_command.parse_cmdline_arguments ();
+    (* Register the parser for natif format *)
+    Why_lexer.register ();
+    (* Register the parser for smt2 format *)
+    Psmt2_to_alt_ergo.register ()
   with Parse_command.Exit_parse_command i -> exit i
 
 module SatCont = (val (Sat_solver.get_current ()) : Sat_solver_sig.SatContainer)
@@ -651,7 +655,8 @@ let run_replay env used_context =
     (fun dcl ->
        let cnf = Cnf.make_list dcl in
        ignore (List.fold_left
-                 (FE.process_decl FE.print_status used_context)
+                 (FE.process_decl
+                    FE.print_status used_context)
                  (empty_sat_inst env.insts, true, Explanation.empty) cnf)
     ) ast_pruned;
   Options.Time.unset_timeout ~is_gui:true

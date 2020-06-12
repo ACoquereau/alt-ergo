@@ -200,7 +200,7 @@ let get_save_used_context () = !save_used_context
 
 (** Execution options *)
 
-let answers_with_loc = ref true
+let answers_with_locs = ref true
 let output_with_colors = ref true
 let output_with_headers = ref true
 let frontend = ref "legacy"
@@ -212,19 +212,19 @@ let preludes = ref []
 let type_only = ref false
 let type_smt2 = ref false
 
-let set_answers_with_loc b = answers_with_loc := b
+let set_answers_with_locs b = answers_with_locs := b
 let set_output_with_colors b = output_with_colors := b
 let set_output_with_headers b = output_with_headers := b
 let set_frontend f = frontend := f
 let set_input_format f = input_format := f
-let set_infer_input_format f = infer_input_format := (f = None)
+let set_infer_input_format b = infer_input_format := b
 let set_parse_only b = parse_only := b
 let set_parsers p = parsers := p
 let set_preludes p = preludes := p
 let set_type_only b = type_only := b
 let set_type_smt2 b = type_smt2 := b
 
-let get_answers_with_locs () = !answers_with_loc
+let get_answers_with_locs () = !answers_with_locs
 let get_output_with_colors () = !output_with_colors
 let get_output_with_headers () = !output_with_headers
 let get_frontend () = !frontend
@@ -281,7 +281,7 @@ let unsat_core = ref false
 let set_interpretation b = interpretation := b
 let set_model b = model := b
 let set_output_format b = output_format := b
-let set_infer_output_format f = infer_output_format := f = None
+let set_infer_output_format b = infer_output_format := b
 let set_unsat_core b = unsat_core := b
 
 let get_interpretation () = !interpretation

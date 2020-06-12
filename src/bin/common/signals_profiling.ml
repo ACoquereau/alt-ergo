@@ -26,42 +26,71 @@
 (*                                                                            *)
 (******************************************************************************)
 
-module type S = sig
-  type t
+open AltErgoLib
+open Options
 
-  exception Sat of t
-  exception Unsat of Explanation.t
-  exception I_dont_know of t
+let timers = Timers.empty ()
 
-  (* the empty sat-solver context *)
-  val empty : unit -> t
-  val empty_with_inst : (Expr.t -> bool) -> t
+let get_timers () = timers
 
-  (** [assume env f] assume a new formula [f] in [env]. Raises Unsat if
-      [f] is unsatisfiable in [env] *)
-  val assume : t -> Expr.gformula -> Explanation.t -> t
+let init_sigterm_6 () =
+  (* what to do with Ctrl+C ? *)
+  Sys.set_signal Sys.sigint(*-6*)
+    (Sys.Signal_handle (fun _ ->
+         if Options.get_profiling() then Profiling.switch (get_fmt_err ())
+         else begin
+           Printer.print_wrn "User wants me to stop.";
+           Printer.print_std "unknown";
+           exit 1
+         end
+       )
+    )
 
-  (** [assume env f exp] assume a new formula [f] with the explanation [exp]
-      in the theories environment of [env]. *)
-  val assume_th_elt : t -> Expr.th_elt -> Explanation.t -> t
+let init_sigterm_11_9 () =
+  (* put the test here because Windows does not handle Sys.Signal_handle
+     correctly *)
+  if Options.get_profiling() then
+    List.iter
+      (fun sign ->
+         Sys.set_signal sign
+           (Sys.Signal_handle
+              (fun _ ->
+                 Profiling.print true (Steps.get_steps ())
+                   timers (get_fmt_err ());
+                 exit 1
+              )
+           )
+      )[ Sys.sigterm (*-11*); Sys.sigquit (*-9*)]
 
-  (** [pred_def env f] assume a new predicate definition [f] in [env]. *)
-  val pred_def : t -> Expr.t -> string -> Explanation.t -> Loc.t -> t
+let init_sigterm_21 () =
+  (* put the test here because Windows does not handle Sys.Signal_handle
+     correctly *)
+  if Options.get_profiling() then
+    Sys.set_signal Sys.sigprof (*-21*)
+      (Sys.Signal_handle
+         (fun _ ->
+            Profiling.print false (Steps.get_steps ()) timers (get_fmt_err ());
+         )
+      )
 
-  (** [unsat env f size] checks the unsatisfiability of [f] in
-      [env]. Raises I_dont_know when the proof tree's height reaches
-      [size]. Raises Sat if [f] is satisfiable in [env] *)
-  val unsat : t -> Expr.gformula -> Explanation.t
+let init_sigalarm () =
+  if not (get_model ()) then
+    try
+      Sys.set_signal Sys.sigvtalrm
+        (Sys.Signal_handle (fun _ -> Options.exec_timeout ()))
+    with Invalid_argument _ -> ()
 
-  (** [print_model header fmt env] print propositional model and theory model
-      on the corresponding fmt. *)
-  val print_model : header:bool -> Format.formatter -> t -> unit
+let init_profiling () =
+  if Options.get_profiling () then begin
+    Timers.reset timers;
+    assert (Options.get_timers());
+    Timers.set_timer_start (Timers.start timers);
+    Timers.set_timer_pause (Timers.pause timers);
+    Profiling.init ();
+  end
 
-  (** [reset_refs ()] reset counters and models *)
-  val reset_refs : unit -> unit
-end
-
-
-module type SatContainer = sig
-  module Make (Th : Theory.S) : S
-end
+let init_signals () =
+  init_sigterm_6 ();
+  init_sigterm_11_9 ();
+  init_sigterm_21 ();
+  init_sigalarm ()

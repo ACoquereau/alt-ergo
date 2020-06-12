@@ -20,6 +20,10 @@ let mandir = ref ""
 
 let static = ref false
 
+(* this option add the possibility to choose the library that handle numbers \
+   in Alt-Ergo between zarith and nums *)
+let numbers_lib = ref "zarith"
+
 let pkg = ref ""
 
 (* Parse command line arguments *)
@@ -30,14 +34,15 @@ let () =
         ("--prefix", Arg.Set_string prefix, "<path> prefix directory");
         ("--libdir", Arg.Set_string libdir, "<path> lib directory");
         ("--static", Arg.Set static, " Enable statically compilation");
+        ("--numbers_lib", Arg.Set_string numbers_lib, " Choose numbers library between Zarith and Nums");
       ]
   in
   let anon_fun s =
     match !pkg with
     | "" -> pkg := s
     | _ ->
-        Format.eprintf "Anonymous argument ignored: '%s'@." s;
-        exit 1
+      Format.eprintf "Anonymous argument ignored: '%s'@." s;
+      exit 1
   in
   let usage = "./configure [options]" in
   Arg.parse args anon_fun usage
@@ -46,8 +51,8 @@ let () =
 let update name r f =
   match !r with
   | "" ->
-      r := f ();
-      Format.printf "Using default value for '%s' : %s@." name !r
+    r := f ();
+    Format.printf "Using default value for '%s' : %s@." name !r
   | s -> Format.printf "Using provided value for '%s' : %s@." name s
 
 (* small wrapper around opam var *)
@@ -80,6 +85,7 @@ let () =
   in
   let () = Format.fprintf fmt {|let libdir = "%s"@.|} !libdir in
   let () = Format.fprintf fmt {|let mandir = "%s"@.|} !mandir in
+  let () = Format.fprintf fmt {|let numbers_lib = "%s"@.|} !numbers_lib in
   let () = Format.fprintf fmt {|
 (* Dynamic configuration, relative to the executable path *)
 

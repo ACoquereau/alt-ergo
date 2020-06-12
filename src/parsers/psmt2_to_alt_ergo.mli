@@ -16,3 +16,6 @@
     Alt-Ergo to partially support the SMT-LIB2 standard and a polymorphic
     extension.
 *)
+
+val register : unit -> unit
+(** register a parser for ".smt2" and ".psmt2" file extensions *)

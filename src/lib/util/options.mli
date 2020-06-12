@@ -281,8 +281,8 @@ val set_replay_all_used_context : bool -> unit
 (** Set [replay_used_context] accessible with {!val:get_replay_used_context} *)
 val set_replay_used_context : bool -> unit
 
-(** Set [answers_with_loc] accessible with {!val:get_answers_with_loc} *)
-val set_answers_with_loc : bool -> unit
+(** Set [answers_with_locs] accessible with {!val:get_answers_with_locs} *)
+val set_answers_with_locs : bool -> unit
 
 (** Set [output_with_colors] accessible with {!val:get_output_with_colors} *)
 val set_output_with_colors : bool -> unit
@@ -291,10 +291,10 @@ val set_output_with_colors : bool -> unit
 val set_output_with_headers : bool -> unit
 
 (** Set [infer_input_format] accessible with {!val:get_infer_input_format} *)
-val set_infer_input_format : 'a option -> unit
+val set_infer_input_format : bool -> unit
 
 (** Set [infer_output_format] accessible with {!val:get_infer_output_format} *)
-val set_infer_output_format : 'a option -> unit
+val set_infer_output_format : bool -> unit
 
 (** Set [parsers] accessible with {!val:get_parsers} *)
 val set_parsers : string list -> unit

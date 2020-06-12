@@ -1,7 +1,7 @@
 (******************************************************************************)
 (*                                                                            *)
 (*     Alt-Ergo: The SMT Solver For Software Verification                     *)
-(*     Copyright (C) 2018-2018 --- OCamlPro SAS                               *)
+(*     Copyright (C) 2018-2020 --- OCamlPro SAS                               *)
 (*                                                                            *)
 (*     This file is distributed under the terms of the license indicated      *)
 (*     in the file 'License.OCamlPro'. If 'License.OCamlPro' is not           *)
@@ -9,35 +9,20 @@
 (*                                                                            *)
 (******************************************************************************)
 
-exception Method_not_registered of string
+open Alt_ergo_common
 
-module type S = sig
+(* Register input method and parsers *)
+let register_input () =
+  Input_frontend.register_legacy ()
 
-  (* Parsing *)
+(* done here to initialize options,
+   before the instantiations of functors *)
+let parse_cmdline () =
+  try Parse_command.parse_cmdline_arguments ()
+  with Parse_command.Exit_parse_command i -> exit i
 
-  type parsed
-
-  val parse_file : file:string -> format:string option -> parsed Seq.t
-
-  val parse_files :
-    filename:string -> preludes:string list -> parsed Seq.t
-
-  (* Typechecking *)
-
-  type env
-
-  val empty_env : env
-
-  val type_parsed : env -> parsed -> int Typed.atdecl list * env
-
-end
-
-let input_methods = ref []
-
-let register name ((module M : S) as m) =
-  input_methods := (name, m) :: !input_methods
-
-let find name =
-  try List.assoc name !input_methods
-  with Not_found -> raise (Method_not_registered name)
-
+let () =
+  register_input ();
+  parse_cmdline ();
+  Signals_profiling.init_signals ();
+  Solving_loop.main ()

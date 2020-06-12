@@ -274,8 +274,8 @@ and parse_string str_buf = parse
     let trigger = aux Why_parser.trigger_parser parse_token
   end
 
-  let () =
-    (*register this parser in Input_lang: 3 different extensions recognized *)
+  let register () =
+    (*register this parser in Input_lang for the file extension ".ae" *)
     let p = (module Parser : Parsers.PARSER_INTERFACE) in
     Parsers.register_parser ~lang:".ae" p
 }
