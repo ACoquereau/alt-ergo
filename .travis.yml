@@ -51,8 +51,8 @@ before_install:
 # Install dependencies
 install:
   - opam pin add --no-action .
-  - opam install --deps-only alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo alt-ergo-js ||
-    ( opam update && opam install --deps-only alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo alt-ergo-js )
+  - opam install --deps-only alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo ||
+    ( opam update && opam install --deps-only alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo )
 
 # Remove source pins before the cache is updated, to avoid
 # having the alt-ergo sources in the cache
@@ -149,7 +149,7 @@ jobs:
     - stage: "js-test"
       name: "js node, worker and example build (no tests)"
       script: rsc/extra/travis_js_test.sh ${LOCAL_INSTALL_DIR}
-      env: OPAMBUILDTEST=false OCAML_VERSION=4.09.0
+      env: OPAMBUILDTEST=false OCAML_VERSION=4.07.0
 
     # === Doc stage ===
     # Next branch (upload doc in gh-pages)

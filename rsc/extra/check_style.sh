@@ -9,7 +9,7 @@
 # Cd to the extra dir regardless of where the script was called
 git_repo=`git rev-parse --show-toplevel`
 
-cd $git_repo/rsc/extra/ocpChecker
+cd $git_repo/rsc/extra/ocpchecker
 
 # Compile style checker
 make

@@ -13,6 +13,13 @@ local_install_dir=$1
 # Cd into the root project directory
 cd $git_repo
 
+# Install Alt-ergo-js deps here since this deps can't be made 
+# for all Alt-Ergo's supported version of OCaml (< 4.07).
+opam pin add --no-action .
+opam install --deps-only alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo alt-ergo-js ||
+ ( opam update &&
+   opam install --deps-only alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo alt-ergo-js )
+
 # Configure using the local installation directory
 ./configure --prefix=$local_install_dir
 

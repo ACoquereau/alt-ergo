@@ -126,7 +126,7 @@ See more details on http://alt-ergo.ocamlpro.com/"
  (license "OCamlPro Non-Commercial Purpose License, version 1")
 
  (depends
-  (ocaml (>= 4.04.0))
+  (ocaml (>= 4.07.0))
   (dune (>= 2.0))
   (alt-ergo-lib (= :version))
   (alt-ergo-parsers (= :version))

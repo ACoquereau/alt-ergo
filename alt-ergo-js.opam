@@ -16,7 +16,7 @@ homepage: "https://alt-ergo.ocamlpro.com/"
 doc: "https://ocamlpro.github.io/alt-ergo/dev/"
 bug-reports: "https://github.com/OCamlPro/alt-ergo/issues"
 depends: [
-  "ocaml" {>= "4.04.0"}
+  "ocaml" {>= "4.07.0"}
   "dune" {>= "2.0"}
   "alt-ergo-lib" {= version}
   "alt-ergo-parsers" {= version}
