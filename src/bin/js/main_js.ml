@@ -31,10 +31,13 @@ let timeout = ref 100.
 let process_results (results : Worker_interface.results) =
   let status = String.concat "\n" results.results in
   let error = String.concat "\n" results.errors in
-  let _model = String.concat "\n" results.model in
-  let _unsat_core = String.concat "\n" results.unsat_core in
+  let warning = String.concat "\n" results.warnings in
+  let debug = String.concat "\n" results.debugs in
+  let model = String.concat "\n" results.model in
+  let unsat_core = String.concat "\n" results.unsat_core in
   print_endline status;
-  (Js.string status, Js.string error)
+  (Js.string status, Js.string error, Js.string warning,
+   Js.string debug, Js.string model, Js.string unsat_core )
 
 (* Function that run the worker. *)
 let exec worker file options =
@@ -70,7 +73,9 @@ let solve () =
 
   (Lwt.pick [
       (let%lwt () = Lwt_js.sleep !timeout in
-       Lwt.return (Js.string "", Js.string "Timeout")
+       Lwt.return (Js.string "", Js.string "Timeout",
+                   Js.string "", Js.string "",
+                   Js.string "", Js.string "")
       );
       (let%lwt results = exec worker !file options in
        Lwt.return (process_results results)
@@ -128,6 +133,26 @@ let error = document##createTextNode (Js.string "")
 let print_error err =
   error##.data := err
 
+let warning = document##createTextNode (Js.string "")
+(* update warning text area *)
+let print_warning wrn =
+  warning##.data := wrn
+
+let debug = document##createTextNode (Js.string "")
+(* update error text area *)
+let print_debug dbg =
+  debug##.data := dbg
+
+let model = document##createTextNode (Js.string "")
+(* update model text area *)
+let print_model mdl =
+  model##.data := mdl
+
+let unsat_core = document##createTextNode (Js.string "")
+(* update unsat core text area *)
+let print_unsat_core usc =
+  unsat_core##.data := usc
+
 let onload _ =
   let main = Js.Opt.get (document##getElementById (Js.string "main"))
       (fun () -> assert false) in
@@ -152,11 +177,19 @@ let onload _ =
                 or until the timeout *)
              print_res (Js.string "Solving");
              print_error (Js.string "");
-             let%lwt (res,err) = solve () in
+             let%lwt (res,err,wrn,dbg,mdl,usc) = solve () in
              (* Update results area *)
              print_res res;
              (* Update errors area if errors occurs at solving *)
              print_error err;
+             (* Update warning area if warning occurs at solving *)
+             print_warning wrn;
+             (* Update debug area *)
+             print_debug dbg;
+             (* Update model *)
+             print_model mdl;
+             (* Update unsat core *)
+             print_unsat_core usc;
              Lwt.return_unit);
          Js._false));
   Dom.appendChild main (Html.createBr document);
@@ -165,6 +198,18 @@ let onload _ =
   Dom.appendChild main (Html.createBr document);
   (* Create a text area for the errors *)
   Dom.appendChild main error;
+  Dom.appendChild main (Html.createBr document);
+  (* Create a text area for the warning *)
+  Dom.appendChild main warning;
+  Dom.appendChild main (Html.createBr document);
+  (* Create a text area for the debug *)
+  Dom.appendChild main debug;
+  Dom.appendChild main (Html.createBr document);
+  (* Create a text area for the model *)
+  Dom.appendChild main model;
+  Dom.appendChild main (Html.createBr document);
+  (* Create a text area for the unsat_core *)
+  Dom.appendChild main unsat_core;
   Js._false
 
 let _ = Html.window##.onload := Html.handler onload

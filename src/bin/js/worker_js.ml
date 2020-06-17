@@ -23,6 +23,19 @@ type 'a state = {
 }
 
 let main file =
+  let buf_std = Buffer.create 10 in
+  Options.set_fmt_std (Format.formatter_of_buffer buf_std);
+  let buf_err = Buffer.create 10 in
+  Options.set_fmt_err (Format.formatter_of_buffer buf_err);
+  let buf_wrn = Buffer.create 10 in
+  Options.set_fmt_wrn (Format.formatter_of_buffer buf_wrn);
+  let buf_dbg = Buffer.create 10 in
+  Options.set_fmt_dbg (Format.formatter_of_buffer buf_dbg);
+  let buf_mdl = Buffer.create 10 in
+  Options.set_fmt_mdl (Format.formatter_of_buffer buf_mdl);
+  let buf_usc = Buffer.create 10 in
+  Options.set_fmt_usc (Format.formatter_of_buffer buf_usc);
+
   Input_frontend.register_legacy ();
 
   let module SatCont =
@@ -37,18 +50,14 @@ let main file =
 
   let module FE = Frontend.Make (SAT) in
 
-  let status = ref [] in
-  let error = ref [] in
-
   let solve all_context (cnf, goal_name) =
     let used_context = FE.choose_used_context all_context ~goal_name in
     SAT.reset_refs ();
-    let _ =
-      List.fold_left
+    let _ = List.fold_left
         (FE.process_decl
            FE.print_status used_context)
         (SAT.empty (), true, Explanation.empty) cnf
-    in status := (Format.flush_str_formatter ()) :: !status ;
+    in ()
   in
 
   let typed_loop all_context state td =
@@ -81,13 +90,11 @@ let main file =
       I.parse_file ~file ~format:None
     with
     | Parsing.Parse_error ->
-      Printer.print_fmt Format.str_formatter "%a" Errors.report
+      Printer.print_err "%a" Errors.report
         (Syntax_error ((Lexing.dummy_pos,Lexing.dummy_pos),""));
-      error := (Format.flush_str_formatter ()) :: !error;
       raise Exit
     | Errors.Error e ->
-      Printer.print_fmt Format.str_formatter "%a" Errors.report e;
-      error := (Format.flush_str_formatter ()) :: !error;
+      Printer.print_err "%a" Errors.report e;
       raise Exit
   in
   let all_used_context = FE.init_all_used_context () in
@@ -96,8 +103,7 @@ let main file =
       let l, env = I.type_parsed state.env p in
       List.fold_left (typed_loop all_used_context) { state with env; } l
     with Errors.Error e ->
-      Printer.print_fmt Format.str_formatter "%a" Errors.report e;
-      error := (Format.flush_str_formatter ()) :: !error;
+      Printer.print_err "%a" Errors.report e;
       raise Exit
   in
 
@@ -112,13 +118,14 @@ let main file =
     try let _ : _ state =
           Seq.fold_left typing_loop state (parsed ()) in ()
     with Exit -> () end;
+
   {
-    Worker_interface.results = List.rev !status;
-    Worker_interface.errors = List.rev !error @ ["errors test"];
-    Worker_interface.warnings = ["warnings test"];
-    Worker_interface.debugs = ["debug test"];
-    Worker_interface.model = ["model test"];
-    Worker_interface.unsat_core = ["unsat core test"];
+    Worker_interface.results = [Buffer.contents buf_std];
+    Worker_interface.errors = [Buffer.contents buf_err];
+    Worker_interface.warnings = [Buffer.contents buf_wrn];
+    Worker_interface.debugs = [Buffer.contents buf_dbg];
+    Worker_interface.model = [Buffer.contents buf_mdl];
+    Worker_interface.unsat_core = [Buffer.contents buf_usc];
   }
 
 (** Worker initialisation
