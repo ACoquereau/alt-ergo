@@ -11,6 +11,7 @@
 
 open Js_of_ocaml
 open Js_of_ocaml_lwt
+open Data_encoding
 
 module Html = Dom_html
 
@@ -55,6 +56,26 @@ let exec worker file options =
   worker##postMessage (file,options);
   t
 
+let decode v =
+  let encoding = string in
+  let dec = Json.destruct encoding v in
+  Format.eprintf "decode : %s@." dec
+
+let results_encoding =
+  let open Worker_interface in
+  conv
+    (fun { results; errors; warnings; debugs; model; unsat_core } ->
+       (results, errors, warnings, debugs, model, unsat_core))
+    (fun (results, errors, warnings, debugs, model, unsat_core) ->
+       { results; errors; warnings; debugs; model; unsat_core })
+    (obj6
+       (req "results" (list string))
+       (req "errors" (list string))
+       (req "warnings" (list string))
+       (req "debugs" (list string))
+       (req "model" (list string))
+       (req "unsat_core" (list string)))
+
 (* Create the web worker and launch 2 threads.
    The first one for the timeout,
    the second on for the call to Alt-Ergo through his web worker *)
@@ -78,7 +99,11 @@ let solve () =
                    Js.string "", Js.string "")
       );
       (let%lwt results = exec worker !file options in
-       Lwt.return (process_results results)
+       Firebug.console##log results;
+       (*  let () = decode results in *)
+       Lwt.return (Js.string "", Js.string "Timeout",
+                   Js.string "", Js.string "",
+                   Js.string "", Js.string "")
       )
     ]
   )

@@ -27,7 +27,7 @@
   (name         worker_js)
   (public_name  alt-ergo-js-worker)
   (package      alt-ergo-js)
-  (libraries    worker_interface alt_ergo_common zarith_stubs_js js_of_ocaml js_of_ocaml-lwt)
+  (libraries    worker_interface alt_ergo_common zarith_stubs_js js_of_ocaml js_of_ocaml-lwt data-encoding)
   (modules      worker_js options_interface)
   (modes        byte js)
   (js_of_ocaml
@@ -40,7 +40,7 @@
   (name         main_js)
   (public_name  alt-ergo-js-example)
   (package      alt-ergo-js)
-  (libraries    worker_interface zarith_stubs_js js_of_ocaml js_of_ocaml-lwt)
+  (libraries    worker_interface zarith_stubs_js js_of_ocaml js_of_ocaml-lwt data-encoding)
   (modules      main_js)
   (modes        byte js)
   (preprocess (pps js_of_ocaml-ppx lwt_ppx))

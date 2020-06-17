@@ -11,6 +11,7 @@
 
 open Js_of_ocaml
 open Js_of_ocaml_lwt
+open Data_encoding
 open Alt_ergo_common
 open AltErgoLib
 
@@ -71,7 +72,7 @@ let main file =
            FE.print_status used_context)
         (SAT.empty (), true, Explanation.empty) cnf in
 
-    if true || Options.get_save_used_context () then begin
+    if Options.get_save_used_context () then begin
       Format.eprintf "Solve finished, print context@.";
       let context = compute_used_context env dep in
 
@@ -149,6 +150,33 @@ let main file =
     Worker_interface.unsat_core = [Buffer.contents buf_usc];
   }
 
+type t = string * int * string
+let encode (v,w,x) =
+  let encoding = tup3 string float string in
+  let x = (v,w,x) in
+  let c = Json.construct encoding x in
+  Js.string (Json.to_string c)
+
+(* let w = Json.destruct encoding j in
+   assert (v = w)
+*)
+
+
+let results_encoding =
+  let open Worker_interface in
+  conv
+    (fun { results; errors; warnings; debugs; model; unsat_core } ->
+       (results, errors, warnings, debugs, model, unsat_core))
+    (fun (results, errors, warnings, debugs, model, unsat_core) ->
+       { results; errors; warnings; debugs; model; unsat_core })
+    (obj6
+       (req "results" (list string))
+       (req "errors" (list string))
+       (req "warnings" (list string))
+       (req "debugs" (list string))
+       (req "model" (list string))
+       (req "unsat_core" (list string)))
+
 (** Worker initialisation
     Run Alt-ergo with the input file (string)
     and the corresponding set of options
@@ -159,7 +187,9 @@ let () =
           Options_interface.set_options options;
           Options.set_file_for_js "";
           let results = main file in
-          Worker.post_message results;
+          let json_results = Json.construct results_encoding results in
+          Worker.post_message (Js.string (Json.to_string json_results));  
+          (* Worker.post_message results; *)
           Lwt.return ();
         )
     )
