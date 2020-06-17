@@ -35,8 +35,6 @@ let main file =
   Options.set_fmt_mdl (Format.formatter_of_buffer buf_mdl);
   let buf_usc = Buffer.create 10 in
   Options.set_fmt_usc (Format.formatter_of_buffer buf_usc);
-  let buf_ctx = Buffer.create 10 in
-  let fmt_ctx = Format.formatter_of_buffer buf_ctx in
 
   Input_frontend.register_legacy ();
 
@@ -52,18 +50,35 @@ let main file =
 
   let module FE = Frontend.Make (SAT) in
 
+  let compute_used_context env dep =
+    let compute_used_context_aux l =
+      List.fold_left (fun acc f ->
+          match Expr.form_view f with
+          | Lemma {name=name;loc=loc;_} -> 
+            let b,e = loc in
+            (name,b.Lexing.pos_lnum,e.Lexing.pos_lnum) :: acc
+          | _ -> acc
+        )[] l in
+    let used,unused = SAT.retrieve_used_context env dep in
+    (compute_used_context_aux used,compute_used_context_aux unused) in
 
   let solve all_context (cnf, goal_name) =
     let used_context = FE.choose_used_context all_context ~goal_name in
     SAT.reset_refs ();
-    let _env,_,dep =
+    let env,_,dep =
       List.fold_left
         (FE.process_decl
            FE.print_status used_context)
         (SAT.empty (), true, Explanation.empty) cnf in
-    Format.eprintf "Solve finished, print context@.";
-    Explanation.print_unsat_core fmt_ctx dep;
-    Format.eprintf "%s@." (Buffer.contents buf_ctx);
+
+    if true || Options.get_save_used_context () then begin
+      Format.eprintf "Solve finished, print context@.";
+      let context = compute_used_context env dep in
+
+      List.iter (fun (used,_,_) ->
+          Format.eprintf "Used : %s@." used
+        ) (fst context);
+    end;
   in
 
   let typed_loop all_context state td =

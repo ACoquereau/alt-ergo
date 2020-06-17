@@ -59,6 +59,9 @@ module type S = sig
 
   (** [reset_refs ()] reset counters and models *)
   val reset_refs : unit -> unit
+
+  val retrieve_used_context :
+    t -> Explanation.t -> Expr.t list * Expr.t list
 end
 
 
