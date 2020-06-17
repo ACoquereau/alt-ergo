@@ -35,6 +35,8 @@ let main file =
   Options.set_fmt_mdl (Format.formatter_of_buffer buf_mdl);
   let buf_usc = Buffer.create 10 in
   Options.set_fmt_usc (Format.formatter_of_buffer buf_usc);
+  let buf_ctx = Buffer.create 10 in
+  let fmt_ctx = Format.formatter_of_buffer buf_ctx in
 
   Input_frontend.register_legacy ();
 
@@ -50,14 +52,18 @@ let main file =
 
   let module FE = Frontend.Make (SAT) in
 
+
   let solve all_context (cnf, goal_name) =
     let used_context = FE.choose_used_context all_context ~goal_name in
     SAT.reset_refs ();
-    let _ = List.fold_left
+    let _env,_,dep =
+      List.fold_left
         (FE.process_decl
            FE.print_status used_context)
-        (SAT.empty (), true, Explanation.empty) cnf
-    in ()
+        (SAT.empty (), true, Explanation.empty) cnf in
+    Format.eprintf "Solve finished, print context@.";
+    Explanation.print_unsat_core fmt_ctx dep;
+    Format.eprintf "%s@." (Buffer.contents buf_ctx);
   in
 
   let typed_loop all_context state td =
@@ -136,6 +142,7 @@ let () =
   Worker.set_onmessage (fun (file,(options:Worker_interface.options)) ->
       Lwt_js_events.async (fun () ->
           Options_interface.set_options options;
+          Options.set_file_for_js "";
           let results = main file in
           Worker.post_message results;
           Lwt.return ();
