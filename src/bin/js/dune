@@ -19,6 +19,7 @@
 (library
   (name         worker_interface)
   (public_name  alt-ergo-js)
+  (libraries    js_of_ocaml data-encoding)
   (modules      worker_interface)
 )
 

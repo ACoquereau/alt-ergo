@@ -11,7 +11,6 @@
 
 open Js_of_ocaml
 open Js_of_ocaml_lwt
-open Data_encoding
 open Alt_ergo_common
 open AltErgoLib
 
@@ -55,7 +54,7 @@ let main file =
     let compute_used_context_aux l =
       List.fold_left (fun acc f ->
           match Expr.form_view f with
-          | Lemma {name=name;loc=loc;_} -> 
+          | Lemma {name=name;loc=loc;_} ->
             let b,e = loc in
             (name,b.Lexing.pos_lnum,e.Lexing.pos_lnum) :: acc
           | _ -> acc
@@ -150,45 +149,20 @@ let main file =
     Worker_interface.unsat_core = [Buffer.contents buf_usc];
   }
 
-type t = string * int * string
-let encode (v,w,x) =
-  let encoding = tup3 string float string in
-  let x = (v,w,x) in
-  let c = Json.construct encoding x in
-  Js.string (Json.to_string c)
 
-(* let w = Json.destruct encoding j in
-   assert (v = w)
-*)
-
-
-let results_encoding =
-  let open Worker_interface in
-  conv
-    (fun { results; errors; warnings; debugs; model; unsat_core } ->
-       (results, errors, warnings, debugs, model, unsat_core))
-    (fun (results, errors, warnings, debugs, model, unsat_core) ->
-       { results; errors; warnings; debugs; model; unsat_core })
-    (obj6
-       (req "results" (list string))
-       (req "errors" (list string))
-       (req "warnings" (list string))
-       (req "debugs" (list string))
-       (req "model" (list string))
-       (req "unsat_core" (list string)))
 
 (** Worker initialisation
     Run Alt-ergo with the input file (string)
     and the corresponding set of options
     Return a couple of list for status (one per goal) and errors *)
 let () =
-  Worker.set_onmessage (fun (file,(options:Worker_interface.options)) ->
+  Worker.set_onmessage (fun (file,json_options) ->
       Lwt_js_events.async (fun () ->
+          let options = Worker_interface.options_from_json json_options in
           Options_interface.set_options options;
           Options.set_file_for_js "";
           let results = main file in
-          let json_results = Json.construct results_encoding results in
-          Worker.post_message (Js.string (Json.to_string json_results));  
+          Worker.post_message (Worker_interface.results_to_json results);
           (* Worker.post_message results; *)
           Lwt.return ();
         )

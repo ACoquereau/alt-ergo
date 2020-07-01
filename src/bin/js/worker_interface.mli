@@ -32,112 +32,112 @@ type frontend =
   | Unknown of string
 
 type options = {
-  debug : bool;
-  debug_ac : bool;
-  debug_adt : bool;
-  debug_arith : bool;
-  debug_arrays : bool;
-  debug_bitv : bool;
-  debug_cc : bool;
-  debug_combine : bool;
-  debug_constr : bool;
-  debug_explanations : bool;
-  debug_fm : bool;
-  debug_fpa : int;
-  debug_gc : bool;
-  debug_interpretation : bool;
-  debug_ite : bool;
-  debug_matching : int;
-  debug_sat : bool;
-  debug_split : bool;
-  debug_sum : bool;
-  debug_triggers : bool;
-  debug_types : bool;
-  debug_typing : bool;
-  debug_uf : bool;
-  debug_unsat_core : bool;
-  debug_use : bool;
-  debug_warnings : bool;
-  rule : int;
+  debug : bool option;
+  debug_ac : bool option;
+  debug_adt : bool option;
+  debug_arith : bool option;
+  debug_arrays : bool option;
+  debug_bitv : bool option;
+  debug_cc : bool option;
+  debug_combine : bool option;
+  debug_constr : bool option;
+  debug_explanations : bool option;
+  debug_fm : bool option;
+  debug_fpa : int option;
+  debug_gc : bool option;
+  debug_interpretation : bool option;
+  debug_ite : bool option;
+  debug_matching : int option;
+  debug_sat : bool option;
+  debug_split : bool option;
+  debug_sum : bool option;
+  debug_triggers : bool option;
+  debug_types : bool option;
+  debug_typing : bool option;
+  debug_uf : bool option;
+  debug_unsat_core : bool option;
+  debug_use : bool option;
+  debug_warnings : bool option;
+  rule : int option;
 
-  case_split_policy : case_split_policy;
-  enable_adts_cs : bool;
-  max_split : int;
+  case_split_policy : case_split_policy option;
+  enable_adts_cs : bool option;
+  max_split : int option;
 
-  replay : bool;
-  replay_all_used_context : bool;
-  replay_used_context : bool;
-  save_used_context : bool;
+  replay : bool option;
+  replay_all_used_context : bool option;
+  replay_used_context : bool option;
+  save_used_context : bool option;
 
-  answers_with_loc : bool;
-  frontend : frontend;
-  input_format : input_format;
-  infer_input_format : bool;
-  parse_only : bool;
-  parsers : string list;
-  preludes : string list;
-  type_only : bool;
-  type_smt2 : bool;
+  answers_with_loc : bool option;
+  frontend : frontend option;
+  input_format : input_format option;
+  infer_input_format : bool option;
+  parse_only : bool option;
+  parsers : (string list) option;
+  preludes : (string list) option;
+  type_only : bool option;
+  type_smt2 : bool option;
 
-  disable_weaks : bool;
-  enable_assertions : bool;
+  disable_weaks : bool option;
+  enable_assertions : bool option;
 
-  age_bound : int;
-  fm_cross_limit : int;
-  steps_bound : int;
+  age_bound : int option;
+  fm_cross_limit : int option;
+  steps_bound : int option;
 
-  interpretation : int;
-  model : model;
+  interpretation : int option;
+  model : model option;
 
-  output_format : output_format;
-  infer_output_format : bool;
-  unsat_core : bool;
+  output_format : output_format option;
+  infer_output_format : bool option;
+  unsat_core : bool option;
 
 
-  verbose : bool;
+  verbose : bool option;
 
-  greedy : bool;
-  instantiate_after_backjump : bool;
-  max_multi_triggers_size : int;
-  nb_triggers : int;
-  no_ematching : bool;
-  no_user_triggers : bool;
-  normalize_instances : bool;
-  triggers_var : bool;
+  greedy : bool option;
+  instantiate_after_backjump : bool option;
+  max_multi_triggers_size : int option;
+  nb_triggers : int option;
+  no_ematching : bool option;
+  no_user_triggers : bool option;
+  normalize_instances : bool option;
+  triggers_var : bool option;
 
-  arith_matching : bool;
-  bottom_classes : bool;
-  cdcl_tableaux_inst : bool;
-  cdcl_tableaux_th : bool;
-  disable_flat_formulas_simplification : bool;
-  enable_restarts : bool;
-  minimal_bj : bool;
-  no_backjumping : bool;
-  no_backward : bool;
-  no_decisions : bool;
-  no_decisions_on : string list;
-  no_sat_learning : bool;
-  sat_solver : sat_solver;
-  tableaux_cdcl : bool;
+  arith_matching : bool option;
+  bottom_classes : bool option;
+  cdcl_tableaux_inst : bool option;
+  cdcl_tableaux_th : bool option;
+  disable_flat_formulas_simplification : bool option;
+  enable_restarts : bool option;
+  minimal_bj : bool option;
+  no_backjumping : bool option;
+  no_backward : bool option;
+  no_decisions : bool option;
+  no_decisions_on : (string list) option;
+  no_sat_learning : bool option;
+  sat_solver : sat_solver option;
+  tableaux_cdcl : bool option;
 
-  disable_ites : bool;
-  inline_lets : bool;
-  rewriting : bool;
-  term_like_pp : bool;
+  disable_ites : bool option;
+  inline_lets : bool option;
+  rewriting : bool option;
+  term_like_pp : bool option;
 
-  disable_adts : bool;
-  no_ac : bool;
-  no_contracongru : bool;
-  no_fm : bool;
-  no_nla : bool;
-  no_tcp : bool;
-  no_theory : bool;
-  restricted : bool;
-  tighten_vars : bool;
-  use_fpa : bool;
-  timers : bool;
+  disable_adts : bool option;
+  no_ac : bool option;
+  no_contracongru : bool option;
+  no_fm : bool option;
+  no_nla : bool option;
+  no_tcp : bool option;
+  no_theory : bool option;
+  restricted : bool option;
+  tighten_vars : bool option;
+  use_fpa : bool option;
+  timers : bool option;
 
-  file : string;
+  file : string option;
 }
 
 type results = {
@@ -152,3 +152,11 @@ type results = {
 (** Return a record containing initialise value for options in Alt-Ergo.
     This options values are the same as Alt-Ergo default values *)
 val init_options : unit -> options
+
+val options_to_json : options -> Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t
+
+val options_from_json : Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t -> options
+
+val results_to_json : results -> Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t
+
+val results_from_json : Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t -> results
