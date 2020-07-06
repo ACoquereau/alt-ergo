@@ -14,11 +14,13 @@ Zip files are not recognised file extension.
 {2 The Alt-ergo web worker}
 
 A web worker of the alt-ergo solver is available with the command [make js-worker].
-This web worker takes a string corresponding to the input file to solve, and a set of options to set. It uses Js_of_ocaml Worker's and Lwt. At the end of solving it returns a couple of string lists.
-The first one corresponds to the status of the different goals to prove.
-The second one corresponds to errors that have occured during solving.
+This web worker takes a string corresponding to the input file to solve, and a Json file that correspond to the set of options to set. It uses Js_of_ocaml Worker's and Lwt. At the end of solving it returns a Json file correspondinf to results, debug informations, etc.
+The [data-encoding] library is used to encode and decode messages to/from the worker.
 
-To run this command you will need the following aditionnal dependencies: [js_of_ocaml] [js_of_ocaml-lwt] and [zarith_stubs_js].
+Options and results format are available in {!module:AltErgoJs.worker_interface} module.
+The module {!module:AltErgoJs.options_interface} takes an `options` types from the worker_interface. Only option fields with values are set.
+
+To run this command you will need the following aditionnal dependencies: [js_of_ocaml] [js_of_ocaml-lwt] [data-encoding] and [zarith_stubs_js].
 The [--timeout] option is ignored due to a lack of js primitives
 Zip files are not recognised file extension.
 
@@ -26,6 +28,6 @@ Zip files are not recognised file extension.
 
 A small example of how to use the Alt-Ergo web worker can be build with the command [make js-example]. This command also makes the web worker if it has not already been built.
 
-To run this command you will need the following aditionnal dependencies: [js_of_ocaml] [js_of_ocaml-lwt] [js_of_ocaml-ppx] and [lwt_ppx].
+To run this command you will need the following aditionnal dependencies: [js_of_ocaml] [js_of_ocaml-lwt] [js_of_ocaml-ppx] [data-encoding] and [lwt_ppx].
 The [--timeout] option is ignored due to a lack of js primitives but a timeout can be set using lwt sleep function.
 Zip files are not recognised file extension.

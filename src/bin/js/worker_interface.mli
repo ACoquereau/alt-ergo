@@ -9,7 +9,14 @@
 (*                                                                            *)
 (******************************************************************************)
 
-(** Types extract from AltErgoLib Utils.util and Utils.options *)
+(** {1 Worker interface module} *)
+
+(** This module aims to facilitate the exhanges from/to the Alt-Ergo's worker *)
+
+(** {2 Option types} *)
+
+(** Types extract from AltErgoLib Utils.util and Utils.options usefull for
+    interact with the worker *)
 
 type model = MNone | MDefault | MAll | MComplete
 
@@ -31,6 +38,8 @@ type frontend =
   | Legacy
   | Unknown of string
 
+(** Record type that contains all options that can be set for the Alt-Ergo's
+    worker. *)
 type options = {
   debug : bool option;
   debug_ac : bool option;
@@ -140,6 +149,8 @@ type options = {
   file : string option;
 }
 
+(** Record type that contains all results that can be returned by the
+    Alt-Ergo's worker. *)
 type results = {
   results : string list;
   errors : string list;
@@ -149,14 +160,29 @@ type results = {
   unsat_core : string list;
 }
 
-(** Return a record containing initialise value for options in Alt-Ergo.
-    This options values are the same as Alt-Ergo default values *)
+(** {2 Functions} *)
+
+(** {3 Options functions} *)
+
+(** Return a record containing None for all options in the option type
+    Since the function set_options in options_interface set only options
+    with value (Some v), this function is use to create a record with all
+    field to None. *)
 val init_options : unit -> options
 
+(** Return a JS string correspondind of the encoding in Json of the options.
+    Field with None value or not included in the Json.*)
 val options_to_json : options -> Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t
 
+(** Get a JS string corresponding of a Json and decoding it into a record of
+    the options type. If some field are not included in the Json,
+    the value None is set for this fields *)
 val options_from_json : Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t -> options
 
+(** {3 Results functions} *)
+
+(** Convert the results type to Json into a Js string *)
 val results_to_json : results -> Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t
 
+(** Convert Js string corresponding to a Json file into the results type *)
 val results_from_json : Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t -> results

@@ -66,6 +66,9 @@ let solve () =
      file = Some "try-alt-ergo";
      debug = Some true;
      verbose = Some true;
+     answers_with_loc = Some false;
+     model = Some Worker_interface.MAll;
+     sat_solver = Some Worker_interface.Tableaux;
     } in
 
   let worker = Worker.create "./alt-ergo-worker.js" in
