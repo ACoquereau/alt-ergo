@@ -167,6 +167,18 @@ type results = {
 
 (** {2 Functions} *)
 
+(** {3 File functions} *)
+
+(** Take an optional file name and the file content as a string and convert
+    it to a json file into Js string *)
+val file_to_json :
+  string option -> string -> Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t
+
+(** Take a Js string corresponding to a Json file and decoding in into
+    an optional file name and the file content *)
+val file_from_json :
+  Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t -> string option * string
+
 (** {3 Options functions} *)
 
 (** Return a record containing None for all options in the option type

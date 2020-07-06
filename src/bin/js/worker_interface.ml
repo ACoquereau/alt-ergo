@@ -916,3 +916,19 @@ let results_from_json res =
   match Json.from_string (Js.to_string res) with
   | Ok res -> Json.destruct results_encoding res
   | Error _e -> assert false
+
+
+let file_encoding =
+  conv
+    (fun f -> f)
+    (fun f -> f)
+    (obj2 (opt "filename" string) (req "content" string))
+
+let file_to_json filename content =
+  let json_file = Json.construct file_encoding (filename,content) in
+  Js.string (Json.to_string json_file)
+
+let file_from_json res =
+  match Json.from_string (Js.to_string res) with
+  | Ok res -> Json.destruct file_encoding res
+  | Error _e -> assert false

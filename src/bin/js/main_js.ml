@@ -69,10 +69,12 @@ let solve () =
        Lwt.return {(Worker_interface.init_results ()) with
                    debugs =Some "Timeout"});
       (
+        let json_file = Worker_interface.file_to_json None !file in
+        Firebug.console##log json_file;
         let json_options = Worker_interface.options_to_json options in
-        (* Firebug.console##log json_options; *)
-        let%lwt results = exec worker !file json_options in
-        (* Firebug.console##log results; *)
+        Firebug.console##log json_options;
+        let%lwt results = exec worker json_file json_options in
+        Firebug.console##log results;
         let res = Worker_interface.results_from_json results in
         Lwt.return res
       )

@@ -158,12 +158,18 @@ let main file =
     and the corresponding set of options
     Return a couple of list for status (one per goal) and errors *)
 let () =
-  Worker.set_onmessage (fun (file,json_options) ->
+  Worker.set_onmessage (fun (json_file,json_options) ->
       Lwt_js_events.async (fun () ->
+          let filename,filecontent = Worker_interface.file_from_json json_file in
+          begin match filename with
+            | Some fl -> Options.set_file_for_js fl
+            | None -> Options.set_file_for_js ""
+          end;
+
           let options = Worker_interface.options_from_json json_options in
           Options_interface.set_options options;
-          Options.set_file_for_js "";
-          let results = main file in
+
+          let results = main filecontent in
           Worker.post_message (Worker_interface.results_to_json results);
           (* Worker.post_message results; *)
           Lwt.return ();
