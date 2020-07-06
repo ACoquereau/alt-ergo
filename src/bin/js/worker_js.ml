@@ -35,6 +35,7 @@ let main file =
   Options.set_fmt_mdl (Format.formatter_of_buffer buf_mdl);
   let buf_usc = Buffer.create 10 in
   Options.set_fmt_usc (Format.formatter_of_buffer buf_usc);
+  let context = ref ([],[]) in
 
   Input_frontend.register_legacy ();
 
@@ -72,12 +73,12 @@ let main file =
         (SAT.empty (), true, Explanation.empty) cnf in
 
     if Options.get_save_used_context () then begin
-      Format.eprintf "Solve finished, print context@.";
-      let context = compute_used_context env dep in
+      (* Format.eprintf "Solve finished, print context@."; *)
+      context := compute_used_context env dep;
 
-      List.iter (fun (used,_,_) ->
+      (* List.iter (fun (used,_,_) ->
           Format.eprintf "Used : %s@." used
-        ) (fst context);
+         ) (fst !context); *)
     end;
   in
 
@@ -141,12 +142,13 @@ let main file =
     with Exit -> () end;
 
   {
-    Worker_interface.results = [Buffer.contents buf_std];
-    Worker_interface.errors = [Buffer.contents buf_err];
-    Worker_interface.warnings = [Buffer.contents buf_wrn];
-    Worker_interface.debugs = [Buffer.contents buf_dbg];
-    Worker_interface.model = [Buffer.contents buf_mdl];
-    Worker_interface.unsat_core = [Buffer.contents buf_usc];
+    Worker_interface.results = Some (Buffer.contents buf_std);
+    Worker_interface.errors = Some (Buffer.contents buf_err);
+    Worker_interface.warnings = Some (Buffer.contents buf_wrn);
+    Worker_interface.debugs = Some (Buffer.contents buf_dbg);
+    Worker_interface.statistics = Some !context;
+    Worker_interface.model = Some (Buffer.contents buf_mdl);
+    Worker_interface.unsat_core = Some (Buffer.contents buf_usc);
   }
 
 

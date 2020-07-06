@@ -74,7 +74,6 @@ module Make(SAT : Sat_solver_sig.S) : S with type sat_env = SAT.t = struct
     | Preprocess
 
   let output_used_context g_name dep =
-    Format.eprintf "frontend output_used_context@.";
     if not (Options.get_js_mode ()) then begin
       let f = Options.get_used_context_file () in
       let cout = open_out (sprintf "%s.%s.used" f g_name) in

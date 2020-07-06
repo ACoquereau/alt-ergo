@@ -252,15 +252,6 @@ type options = {
   file : string option;
 }
 
-type results = {
-  results : string list;
-  errors : string list;
-  warnings : string list;
-  debugs : string list;
-  model : string list;
-  unsat_core : string list;
-}
-
 let init_options () = {
   debug = None;
   debug_ac = None;
@@ -370,29 +361,6 @@ let init_options () = {
   file = None;
 }
 
-
-let results_encoding =
-  conv
-    (fun { results; errors; warnings; debugs; model; unsat_core } ->
-       (results, errors, warnings, debugs, model, unsat_core))
-    (fun (results, errors, warnings, debugs, model, unsat_core) ->
-       { results; errors; warnings; debugs; model; unsat_core })
-    (obj6
-       (req "results" (list string))
-       (req "errors" (list string))
-       (req "warnings" (list string))
-       (req "debugs" (list string))
-       (req "model" (list string))
-       (req "unsat_core" (list string)))
-
-let results_to_json res =
-  let json_results = Json.construct results_encoding res in
-  Js.string (Json.to_string json_results)
-
-let results_from_json res =
-  match Json.from_string (Js.to_string res) with
-  | Ok res -> Json.destruct results_encoding res
-  | Error _e -> assert false
 
 let opt_dbg1_encoding =
   conv
@@ -894,4 +862,57 @@ let options_from_json options =
       timers;
       file
     }
+  | Error _e -> assert false
+
+type statistics =
+  (string * int * int) list *
+  (string * int * int) list
+
+let statistics_encoding =
+  tup2
+    (list (tup3 string int31 int31))
+    (list (tup3 string int31 int31))
+
+type results = {
+  results : string option;
+  errors : string option;
+  warnings : string option;
+  debugs : string option;
+  statistics : statistics option;
+  model : string option;
+  unsat_core : string option;
+}
+
+let init_results () = {
+  results = None;
+  errors = None;
+  warnings = None;
+  debugs = None;
+  statistics = None;
+  model = None;
+  unsat_core = None;
+}
+
+let results_encoding =
+  conv
+    (fun { results; errors; warnings; debugs; statistics; model; unsat_core } ->
+       (results, errors, warnings, debugs, statistics, model, unsat_core))
+    (fun (results, errors, warnings, debugs, statistics, model, unsat_core) ->
+       { results; errors; warnings; debugs; statistics; model; unsat_core })
+    (obj7
+       (opt "results" string)
+       (opt "errors" string)
+       (opt "warnings" string)
+       (opt "debugs" string)
+       (opt "statistics" statistics_encoding)
+       (opt "model" string)
+       (opt "unsat_core" string))
+
+let results_to_json res =
+  let json_results = Json.construct results_encoding res in
+  Js.string (Json.to_string json_results)
+
+let results_from_json res =
+  match Json.from_string (Js.to_string res) with
+  | Ok res -> Json.destruct results_encoding res
   | Error _e -> assert false

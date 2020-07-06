@@ -26,19 +26,6 @@ let extension = ref ".ae"
 (* Timeout *)
 let timeout = ref 100.
 
-(* This function aims to concat results from the execution of the worker and
-   return them as JS.string *)
-let process_results (results : Worker_interface.results) =
-  let status = String.concat "\n" results.results in
-  let error = String.concat "\n" results.errors in
-  let warning = String.concat "\n" results.warnings in
-  let debug = String.concat "\n" results.debugs in
-  let model = String.concat "\n" results.model in
-  let unsat_core = String.concat "\n" results.unsat_core in
-  print_endline status;
-  (Js.string status, Js.string error, Js.string warning,
-   Js.string debug, Js.string model, Js.string unsat_core )
-
 (* Function that run the worker. *)
 let exec worker file options =
   (* create a cancelable promise that can be cancel in case of timeout *)
@@ -69,26 +56,25 @@ let solve () =
      answers_with_loc = Some false;
      model = Some Worker_interface.MAll;
      sat_solver = Some Worker_interface.Tableaux;
+     save_used_context = Some true;
     } in
 
   let worker = Worker.create "./alt-ergo-worker.js" in
 
-  print_endline
-    ("Start Alt-Ergo with timeout of "^ (string_of_float !timeout) ^"s");
+  (* print_endline
+     ("Start Alt-Ergo with timeout of "^ (string_of_float !timeout) ^"s"); *)
 
   (Lwt.pick [
       (let%lwt () = Lwt_js.sleep !timeout in
-       Lwt.return (Js.string "", Js.string "Timeout",
-                   Js.string "", Js.string "",
-                   Js.string "", Js.string "")
-      );
+       Lwt.return {(Worker_interface.init_results ()) with
+                   debugs =Some "Timeout"});
       (
         let json_options = Worker_interface.options_to_json options in
-        Firebug.console##log json_options;
+        (* Firebug.console##log json_options; *)
         let%lwt results = exec worker !file json_options in
-        Firebug.console##log results;
+        (* Firebug.console##log results; *)
         let res = Worker_interface.results_from_json results in
-        Lwt.return (process_results res)
+        Lwt.return res
       )
     ]
   )
@@ -135,33 +121,51 @@ let button name callback =
 
 let result = document##createTextNode (Js.string "")
 (* update result text area *)
-let print_res res =
-  result##.data := res
+let print_res = function
+  | Some res ->
+    result##.data := Js.string res
+  | None -> ()
 
 let error = document##createTextNode (Js.string "")
 (* update error text area *)
-let print_error err =
-  error##.data := err
+let print_error = function
+  | Some err ->
+    error##.data := Js.string err
+  | None -> ()
 
 let warning = document##createTextNode (Js.string "")
 (* update warning text area *)
-let print_warning wrn =
-  warning##.data := wrn
+let print_warning = function
+  | Some wrn ->
+    warning##.data := Js.string wrn
+  | None -> ()
 
 let debug = document##createTextNode (Js.string "")
 (* update error text area *)
-let print_debug dbg =
-  debug##.data := dbg
+let print_debug = function
+  | Some dbg ->
+    debug##.data := Js.string dbg
+  | None -> ()
 
 let model = document##createTextNode (Js.string "")
 (* update model text area *)
-let print_model mdl =
-  model##.data := mdl
+let print_model = function
+  | Some mdl ->
+    model##.data := Js.string mdl
+  | None -> ()
 
 let unsat_core = document##createTextNode (Js.string "")
 (* update unsat core text area *)
-let print_unsat_core usc =
-  unsat_core##.data := usc
+let print_unsat_core = function
+  | Some usc ->  unsat_core##.data := Js.string usc
+  | None -> ()
+
+let statistics = document##createTextNode (Js.string "")
+(* update statistics text area *)
+let print_statistics = function
+  | None -> ()
+  | Some sta ->
+    statistics##.data := Js.string "stats"
 
 let onload _ =
   let main = Js.Opt.get (document##getElementById (Js.string "main"))
@@ -185,21 +189,23 @@ let onload _ =
          Lwt_js_events.async (fun () ->
              (* Print "solving" until the end of the solving
                 or until the timeout *)
-             print_res (Js.string "Solving");
-             print_error (Js.string "");
-             let%lwt (res,err,wrn,dbg,mdl,usc) = solve () in
+             print_res (Some "Solving");
+             print_error (Some "");
+             let%lwt res = solve () in
              (* Update results area *)
-             print_res res;
+             print_res res.results;
              (* Update errors area if errors occurs at solving *)
-             print_error err;
+             print_error res.errors;
              (* Update warning area if warning occurs at solving *)
-             print_warning wrn;
+             print_warning res.warnings;
              (* Update debug area *)
-             print_debug dbg;
+             print_debug res.debugs;
              (* Update model *)
-             print_model mdl;
+             print_model res.model;
              (* Update unsat core *)
-             print_unsat_core usc;
+             print_unsat_core res.unsat_core;
+             (* Update statistics *)
+             print_statistics res.statistics;
              Lwt.return_unit);
          Js._false));
   Dom.appendChild main (Html.createBr document);
@@ -220,6 +226,9 @@ let onload _ =
   Dom.appendChild main (Html.createBr document);
   (* Create a text area for the unsat_core *)
   Dom.appendChild main unsat_core;
+  Dom.appendChild main (Html.createBr document);
+  (* Create a text area for the statistics *)
+  Dom.appendChild main statistics;
   Js._false
 
 let _ = Html.window##.onload := Html.handler onload

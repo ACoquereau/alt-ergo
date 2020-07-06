@@ -149,15 +149,20 @@ type options = {
   file : string option;
 }
 
+type statistics =
+  (string * int * int) list *
+  (string * int * int) list
+
 (** Record type that contains all results that can be returned by the
     Alt-Ergo's worker. *)
 type results = {
-  results : string list;
-  errors : string list;
-  warnings : string list;
-  debugs : string list;
-  model : string list;
-  unsat_core : string list;
+  results : string option;
+  errors : string option;
+  warnings : string option;
+  debugs : string option;
+  statistics : statistics option;
+  model : string option;
+  unsat_core : string option;
 }
 
 (** {2 Functions} *)
@@ -180,6 +185,9 @@ val options_to_json : options -> Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t
 val options_from_json : Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t -> options
 
 (** {3 Results functions} *)
+
+(** Return a record containing None for all results field in the results type *)
+val init_results : unit -> results
 
 (** Convert the results type to Json into a Js string *)
 val results_to_json : results -> Js_of_ocaml.Js.js_string Js_of_ocaml.Js.t
