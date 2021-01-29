@@ -46,23 +46,23 @@ jobs:
           git config --global user.name github-actions
           git config --global user.email github-actions-bot@users.noreply.github.com
 
-      - name: Pin no action
-        run: opam pin add . -y --no-action
+      # - name: Pin no action
+      #   run: opam pin add . -y --no-action
 
-      - name: Install depext
-        run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
-        # if: steps.cache-opam.outputs.cache-hit != 'true'
+      # - name: Install depext
+      #   run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
+      #   # if: steps.cache-opam.outputs.cache-hit != 'true'
 
-      - name: Install deps
-        run: opam install -y ./*.opam --deps-only --with-test
-        # if: steps.cache-opam.outputs.cache-hit != 'true'
+      # - name: Install deps
+      #   run: opam install -y ./*.opam --deps-only --with-test
+      #   # if: steps.cache-opam.outputs.cache-hit != 'true'
 
-      - name: Fixup
-        run: opam upgrade --fixup
-        # if: steps.cache-opam.outputs.cache-hit == 'true'
+      # - name: Fixup
+      #   run: opam upgrade --fixup
+      #   # if: steps.cache-opam.outputs.cache-hit == 'true'
 
-      - name: Install
-        run: opam install -y .
+      # - name: Install
+      #   run: opam install -y .
 
       - name: Run non regression tests
         run: opam exec -- rsc/extra/non_regression.sh
