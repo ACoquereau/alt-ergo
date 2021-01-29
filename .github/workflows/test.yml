@@ -30,6 +30,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
+
           ref: ${{ github.event.head_branch }}
 
       - name: Retrieve opam cache
