@@ -64,8 +64,8 @@ jobs:
     # Test every make release rule
     name: Make release
 
-    # Only if in pull request
-    if: github.event_name == 'pull_request'
+    # Only if in pull request or a push on main or next
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/next'
 
     strategy:
       matrix:
