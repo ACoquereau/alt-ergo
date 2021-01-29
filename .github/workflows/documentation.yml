@@ -15,6 +15,8 @@ jobs:
           - ubuntu-latest
         ocaml-version:
           - 4.10.0
+        cache-name:
+          - odoc
 
     runs-on: ${{ matrix.os }}
 
@@ -27,9 +29,7 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
-#          restore-keys: |
-#            v1-${{ runner.os }}-opam-${{ matrix.ocaml-version }}-
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
 
       - name: Use OCaml ${{ matrix.ocaml-version }}
         uses: avsm/setup-ocaml@v1
