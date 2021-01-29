@@ -260,125 +260,125 @@ jobs:
         run: opam install .
 
 
-  opam_install_os:
-    # Test to install all package on different os with opam
-    name: Opam OS
+  # opam_install_os:
+  #   # Test to install all package on different os with opam
+  #   name: Opam OS
 
-    # Only if in pull request
-    if: github.event_name == 'pull_request'
+  #   # Only if in pull request
+  #   if: github.event_name == 'pull_request'
 
-    needs: opam_all
+  #   needs: opam_all
 
-    strategy:
-      matrix:
-        # Setup the main ocaml version to test
-        ocaml-version:
-          - 4.10.0
-        os:
-          - windows-latest
-          - macos-latest
+  #   strategy:
+  #     matrix:
+  #       # Setup the main ocaml version to test
+  #       ocaml-version:
+  #         - 4.10.0
+  #       os:
+  #         - windows-latest
+  #         - macos-latest
 
-    runs-on: ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
 
-      - name: Retrieve opam cache
-        uses: actions/cache@v2
-        id: cache-opam
-        with:
-          path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+  #     - name: Retrieve opam cache
+  #       uses: actions/cache@v2
+  #       id: cache-opam
+  #       with:
+  #         path: ~/.opam
+  #         key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
 
-      - name: Use OCaml ${{ matrix.ocaml-version }}
-        uses: avsm/setup-ocaml@v1
-        with:
-          ocaml-version: ${{ matrix.ocaml-version }}
+  #     - name: Use OCaml ${{ matrix.ocaml-version }}
+  #       uses: avsm/setup-ocaml@v1
+  #       with:
+  #         ocaml-version: ${{ matrix.ocaml-version }}
 
-      - name: Set git user
-        run: |
-          git config --global user.name github-actions
-          git config --global user.email github-actions-bot@users.noreply.github.com
+  #     - name: Set git user
+  #       run: |
+  #         git config --global user.name github-actions
+  #         git config --global user.email github-actions-bot@users.noreply.github.com
 
-      - name: Pin no actio
-        run: opam pin add . -y --no-action
+  #     - name: Pin no actio
+  #       run: opam pin add . -y --no-action
 
-      - name: Install depext
-        run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
-        # if: steps.cache-opam.outputs.cache-hit != 'true'
+  #     - name: Install depext
+  #       run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
+  #       # if: steps.cache-opam.outputs.cache-hit != 'true'
 
-      - name: Install deps
-        run: opam install -y ./*.opam --deps-only --with-test
-        # if: steps.cache-opam.outputs.cache-hit != 'true'
+  #     - name: Install deps
+  #       run: opam install -y ./*.opam --deps-only --with-test
+  #       # if: steps.cache-opam.outputs.cache-hit != 'true'
 
-      - name: Fixup
-        run: opam upgrade --fixup
-        # if: steps.cache-opam.outputs.cache-hit == 'true'
+  #     - name: Fixup
+  #       run: opam upgrade --fixup
+  #       # if: steps.cache-opam.outputs.cache-hit == 'true'
 
-      - name: Install
-        run: opam install .
+  #     - name: Install
+  #       run: opam install .
 
 
-  opam_install_ocaml_versions:
-    # Test different versions of OCaml
-    name: Opam OCaml versions
+  # opam_install_ocaml_versions:
+  #   # Test different versions of OCaml
+  #   name: Opam OCaml versions
 
-    # Only if in pull request
-    if: github.event_name == 'pull_request'
+  #   # Only if in pull request
+  #   if: github.event_name == 'pull_request'
 
-    needs: opam_all
+  #   needs: opam_all
 
-    strategy:
-      matrix:
-        # Setup ocaml versions and os to test
-        os:
-          - ubuntu-latest
-        ocaml-version:
-          - 4.04.2
-          - 4.05.0
-          - 4.06.1
-          - 4.07.1
-          - 4.08.1
-          - 4.09.1
+  #   strategy:
+  #     matrix:
+  #       # Setup ocaml versions and os to test
+  #       os:
+  #         - ubuntu-latest
+  #       ocaml-version:
+  #         - 4.04.2
+  #         - 4.05.0
+  #         - 4.06.1
+  #         - 4.07.1
+  #         - 4.08.1
+  #         - 4.09.1
 
-    runs-on: ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
 
-      - name: Retrieve opam cache
-        uses: actions/cache@v2
-        id: cache-opam
-        with:
-          path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+  #     - name: Retrieve opam cache
+  #       uses: actions/cache@v2
+  #       id: cache-opam
+  #       with:
+  #         path: ~/.opam
+  #         key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
 
-      - name: Use OCaml ${{ matrix.ocaml-version }}
-        uses: avsm/setup-ocaml@v1
-        with:
-          ocaml-version: ${{ matrix.ocaml-version }}
+  #     - name: Use OCaml ${{ matrix.ocaml-version }}
+  #       uses: avsm/setup-ocaml@v1
+  #       with:
+  #         ocaml-version: ${{ matrix.ocaml-version }}
 
-      - name: Set git user
-        run: |
-          git config --global user.name github-actions
-          git config --global user.email github-actions-bot@users.noreply.github.com
+  #     - name: Set git user
+  #       run: |
+  #         git config --global user.name github-actions
+  #         git config --global user.email github-actions-bot@users.noreply.github.com
 
-      - name: Pin no action
-        run: opam pin add . -y --no-action
+  #     - name: Pin no action
+  #       run: opam pin add . -y --no-action
 
-      - name: Install depext
-        run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
-        # if: steps.cache-opam.outputs.cache-hit != 'true'
+  #     - name: Install depext
+  #       run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
+  #       # if: steps.cache-opam.outputs.cache-hit != 'true'
 
-      - name: Install deps
-        run: opam install -y ./*.opam --deps-only --with-test
-        # if: steps.cache-opam.outputs.cache-hit != 'true'
+  #     - name: Install deps
+  #       run: opam install -y ./*.opam --deps-only --with-test
+  #       # if: steps.cache-opam.outputs.cache-hit != 'true'
 
-      - name: Fixup
-        run: opam upgrade --fixup
-        # if: steps.cache-opam.outputs.cache-hit == 'true'
+  #     - name: Fixup
+  #       run: opam upgrade --fixup
+  #       # if: steps.cache-opam.outputs.cache-hit == 'true'
 
-      - name: Install
-        run: opam install .
+  #     - name: Install
+  #       run: opam install .
