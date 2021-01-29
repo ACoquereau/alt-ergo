@@ -21,8 +21,15 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+
+      - run: echo "$GITHUB_REF"
+      - run: echo "$GITHUB_HEAD_REF"
+      - run: echo "$GITHUB_BASE_REF"
+
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.head_branch }}
 
       - name: Retrieve opam cache
         uses: actions/cache@v2
