@@ -64,7 +64,7 @@ jobs:
     # We only run this if the ocaml documentation build is successful
     needs: ocaml_docs
     # Sphinx documentation is only builded if a PR is open
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
@@ -73,14 +73,6 @@ jobs:
         with:
           docs-folder: "docs/sphinx_docs/"
           build-command: "sphinx-build -b html . _build"
-
-      - run: mkdir -p docs/sphinx_docs/_build/odoc/dev
-
-      - name: Download ocaml documentation in sphinx doc
-        uses: actions/download-artifact@v2
-        with:
-          name: ocaml_doc
-          path: docs/sphinx_docs/_build/odoc/dev
 
       - name: Upload sphinx documentation
         uses: actions/upload-artifact@v2
@@ -96,7 +88,13 @@ jobs:
     needs: sphinx_docs
     runs-on: ubuntu-latest
     steps:
-      - name: Download sphinx documentation with ocaml documentation
+      - name: Download ocaml documentation
+        uses: actions/download-artifact@v2
+        with:
+          name: ocaml_doc
+          path: docs/odoc/dev
+
+      - name: Download sphinx documentation
         uses: actions/download-artifact@v2
         with:
           name: sphinx_doc
