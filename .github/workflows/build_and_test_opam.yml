@@ -163,6 +163,10 @@ jobs:
       - name: Install
         run: opam install .
 
+      - name: Get AE version
+        run: opam exec -- alt-ergo --version
+        if: matrix.os == 'windows-latest'
+
   opam_complete_tests_os:
     name: Complete os tests
 
@@ -203,8 +207,8 @@ jobs:
 
       - name: Convert non-regression script to dos
         run: |
-          unix2dos rsc/extra/non-regression.sh
-          unix2dos non-regression/*.sh
+          dos2unix rsc/extra/non_regression.sh
+          dos2unix non-regression/*.sh
         if: matrix.os == 'windows-latest'
 
       - name: Run non regression tests
