@@ -64,7 +64,7 @@ jobs:
     # We only run this if the ocaml documentation build is successful
     needs: ocaml_docs
     # Sphinx documentation is only builded if a PR is open
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
     runs-on: ubuntu-latest
 
     steps:
