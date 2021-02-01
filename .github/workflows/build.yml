@@ -53,11 +53,11 @@ jobs:
 
       - name: Install deps
         run: opam install -y ./*.opam --deps-only --with-test
-        # if: steps.cache-opam.outputs.cache-hit != 'true'
+        if: steps.cache-opam.outputs.cache-hit != 'true'
 
       - name: Fixup
         run: opam upgrade --fixup
-        # if: steps.cache-opam.outputs.cache-hit == 'true'
+        if: steps.cache-opam.outputs.cache-hit == 'true'
 
       - name: Make
         run: opam exec -- make
@@ -254,7 +254,7 @@ jobs:
 
       - name: Install depext
         run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
-        if: steps.cache-opam.outputs.cache-hit != 'true'
+        # if: steps.cache-opam.outputs.cache-hit != 'true'
 
       - name: Install deps
         run: opam install -y ./*.opam --deps-only --with-test
@@ -315,7 +315,7 @@ jobs:
 
       - name: Install depext
         run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
-        if: steps.cache-opam.outputs.cache-hit != 'true'
+        # if: steps.cache-opam.outputs.cache-hit != 'true'
 
       - name: Install deps
         run: opam install -y ./*.opam --deps-only --with-test
@@ -381,7 +381,7 @@ jobs:
 
       - name: Install depext
         run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
-        if: steps.cache-opam.outputs.cache-hit != 'true'
+        # if: steps.cache-opam.outputs.cache-hit != 'true'
 
       - name: Install deps
         run: opam install -y ./*.opam --deps-only --with-test
