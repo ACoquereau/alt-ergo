@@ -61,6 +61,45 @@ jobs:
       - name: Install
         run: opam install .
 
+  quick_tests:
+    name: Quick tests
+
+    needs:
+      - opam_all
+
+    strategy:
+      matrix:
+        # Setup the main ocaml version and os to test
+        ocaml-version:
+          - 4.10.0
+        os:
+          - ubuntu-latest
+        cache-name:
+          - opam-all
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Retrieve opam cache
+        uses: actions/cache@v2
+        id: cache-opam
+        with:
+          path: ~/.opam
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+
+      - name: Use OCaml ${{ matrix.ocaml-version }}
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: ${{ matrix.ocaml-version }}
+
+      - name: Run non regression tests
+        run: opam exec -- rsc/extra/non_regression.sh
+
+
+
   opam_install_os:
     # Test to install all package on different os with opam
     name: Opam OS
@@ -68,7 +107,8 @@ jobs:
     # Only if in pull request
     if: github.event_name == 'pull_request'
 
-    needs: opam_all
+    needs:
+      - quick_tests
 
     strategy:
       matrix:
@@ -130,7 +170,8 @@ jobs:
     # Only if in pull request
     if: github.event_name == 'pull_request'
 
-    needs: opam_all
+    needs:
+      - quick_tests
 
     strategy:
       matrix:
