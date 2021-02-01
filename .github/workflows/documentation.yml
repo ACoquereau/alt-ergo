@@ -74,6 +74,8 @@ jobs:
           docs-folder: "docs/sphinx_docs/"
           build-command: "sphinx-build -b html . _build"
 
+      - run: mkdir -p docs/sphinx_docs/_build/odoc/dev
+
       - name: Download ocaml documentation in sphinx doc
         uses: actions/download-artifact@v2
         with:
