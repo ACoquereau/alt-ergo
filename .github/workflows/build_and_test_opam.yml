@@ -201,6 +201,12 @@ jobs:
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
 
+      - name: Convert non-regression script to dos
+        run: |
+          unix2dos rsc/extra/non-regression.sh
+          unix2dos non-regression/*.sh
+        if: matrix.os == 'windows-latest'
+
       - name: Run non regression tests
         run: opam exec -- rsc/extra/non_regression.sh
 
