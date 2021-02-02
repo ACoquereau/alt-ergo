@@ -106,7 +106,7 @@ jobs:
     # Test to install all package on mac with opam
     name: Install MacOS
 
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
     needs:
       - tests_ubuntu
@@ -163,8 +163,7 @@ jobs:
   tests_macos:
     name: Tests MacOS
 
-    # Only if in pull request
-    if: github.event_name == 'pull_request'
+    if: github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
     needs:
       - install_macos
@@ -445,7 +444,7 @@ jobs:
   upload_ubuntu:
     name: Upload Ubuntu
 
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
     needs:
       - tests_ubuntu
@@ -544,7 +543,7 @@ jobs:
     # Test to install all package on mac with opam
     name: Upload MacOS
 
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
     needs:
       - install_macos
@@ -593,8 +592,7 @@ jobs:
   all_windows:
     name: All Windows
 
-    # Only if in pull request
-    if: github.event_name == 'pull_request'
+    if: github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
     needs:
       - tests_ubuntu
@@ -653,12 +651,14 @@ jobs:
         run: |
           echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
           echo "::set-output name=path::$(opam var bin)"
+        if: github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
       - name: Upload Alt-Ergo binary
         uses: actions/upload-artifact@v2
         with:
           name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
-          path: "${{ steps.get_version_path.outputs.path }}\alt-ergo"
+          path: "${{ steps.get_version_path.outputs.path }}\\alt-ergo"
+        if: github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
       - name: Convert non-regression script to dos
         run: |
