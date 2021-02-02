@@ -5,10 +5,14 @@ name: Build opam
 on: [push,pull_request]
 
 jobs:
-  opam_all:
+
+################################################################################
+# Ubuntu
+################################################################################
+  install_ubuntu:
     # Basic test to check if the project build with opam.
     # If this test fails, no more building test with opam and non-regression are done
-    name: Opam all
+    name: Install ubuntu
 
     strategy:
       matrix:
@@ -17,8 +21,6 @@ jobs:
           - 4.10.0
         os:
           - ubuntu-latest
-        cache-name:
-          - opam-all
 
     runs-on: ${{ matrix.os }}
 
@@ -31,7 +33,7 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
 
       - name: Use OCaml ${{ matrix.ocaml-version }}
         uses: avsm/setup-ocaml@v1
@@ -61,26 +63,11 @@ jobs:
       - name: Install
         run: opam install .
 
-      - name: Get version and path
-        id: get_version_path
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
-        run: |
-          echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
-          echo "::set-output name=path::$(opam var bin)"
-
-      # Upload Alt-Ergo binary if actions is triggered on next or in a PR
-      - name: Upload Alt-Ergo binary
-        uses: actions/upload-artifact@v2
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
-        with:
-          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
-          path: "${{ steps.get_version_path.outputs.path }}/alt-ergo"
-
-  quick_tests:
-    name: Quick tests
+  tests_ubuntu:
+    name: Ubuntu tests
 
     needs:
-      - opam_all
+      - install_ubuntu
 
     strategy:
       matrix:
@@ -89,8 +76,6 @@ jobs:
           - 4.10.0
         os:
           - ubuntu-latest
-        cache-name:
-          - opam-all
 
     runs-on: ${{ matrix.os }}
 
@@ -103,7 +88,7 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
 
       - name: Use OCaml ${{ matrix.ocaml-version }}
         uses: avsm/setup-ocaml@v1
@@ -114,21 +99,17 @@ jobs:
         run: opam exec -- rsc/extra/non_regression.sh
 
 
-
-
-
-
-
-
-  opam_install_macos:
+################################################################################
+# Macos
+################################################################################
+  install_macos:
     # Test to install all package on mac with opam
-    name: Opam MacOS
+    name: Install MacOS
 
-    # Only if in pull request
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
     needs:
-      - quick_tests
+      - tests_ubuntu
 
     strategy:
       matrix:
@@ -137,8 +118,6 @@ jobs:
           - 4.10.0
         os:
           - macos-latest
-        cache-name:
-          - opam-os
 
     runs-on: ${{ matrix.os }}
 
@@ -151,7 +130,7 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
 
       - name: Use OCaml ${{ matrix.ocaml-version }}
         uses: avsm/setup-ocaml@v1
@@ -181,30 +160,14 @@ jobs:
       - name: Install
         run: opam install .
 
-      - name: Get version and path
-        id: get_version_path
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
-        run: |
-          echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
-          echo "::set-output name=path::$(opam var bin)"
-
-      # Upload Alt-Ergo binary if actions is triggered on next or in a PR
-      - name: Upload Alt-Ergo binary
-        uses: actions/upload-artifact@v2
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
-        with:
-          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
-          path: "${{ steps.get_version_path.outputs.path }}/alt-ergo"
-
-
-  opam_complete_tests_macos:
-    name: Complete MacOS tests
+  tests_macos:
+    name: MacOS tests
 
     # Only if in pull request
     if: github.event_name == 'pull_request'
 
     needs:
-      - opam_install_macos
+      - install_macos
 
     strategy:
       matrix:
@@ -213,8 +176,6 @@ jobs:
           - 4.10.0
         os:
           - macos-latest
-        cache-name:
-          - opam-os
 
     runs-on: ${{ matrix.os }}
 
@@ -227,7 +188,7 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
 
       - name: Use OCaml ${{ matrix.ocaml-version }}
         uses: avsm/setup-ocaml@v1
@@ -237,24 +198,17 @@ jobs:
       - name: Run non regression tests
         run: opam exec -- rsc/extra/non_regression.sh
 
-
-
-
-
-
-
-
-
-
-  opam_install_windows:
+################################################################################
+# Windows
+################################################################################
+  install_windows:
     # Test to install all package on different os with opam
-    name: Opam Windows
+    name: Install Windows
 
-    # Only if in pull request
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
     needs:
-      - quick_tests
+      - tests_ubuntu
 
     strategy:
       matrix:
@@ -263,8 +217,6 @@ jobs:
           - 4.10.0
         os:
           - windows-latest
-        cache-name:
-          - opam-windows
 
     runs-on: ${{ matrix.os }}
 
@@ -277,7 +229,7 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
 
       - name: Use OCaml ${{ matrix.ocaml-version }}
         uses: avsm/setup-ocaml@v1
@@ -307,29 +259,14 @@ jobs:
       - name: Install
         run: opam install .
 
-      - name: Get version and path
-        id: get_version_path
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
-        run: |
-          echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
-          echo "::set-output name=path::$(opam var bin)"
-
-      # Upload Alt-Ergo binary if actions is triggered on next or in a PR
-      - name: Upload Alt-Ergo binary
-        uses: actions/upload-artifact@v2
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
-        with:
-          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
-          path: "${{ steps.get_version_path.outputs.path }}\alt-ergo"
-
-  opam_complete_tests_windows:
-    name: Complete windows tests
+  tests_windows:
+    name: Windows tests
 
     # Only if in pull request
     if: github.event_name == 'pull_request'
 
     needs:
-      - opam_install_windows
+      - install_windows
 
     strategy:
       matrix:
@@ -338,8 +275,6 @@ jobs:
           - 4.10.0
         os:
           - windows-latest
-        cache-name:
-          - opam-windows
 
     runs-on: ${{ matrix.os }}
 
@@ -352,7 +287,7 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
 
       - name: Use OCaml ${{ matrix.ocaml-version }}
         uses: avsm/setup-ocaml@v1
@@ -390,21 +325,17 @@ jobs:
       - name: Run non regression tests
         run: opam exec -- rsc/extra/non_regression.sh
 
-
-
-
-
-
-
-  opam_install_ocaml_versions:
+################################################################################
+# OCaml versions
+################################################################################
+  install_ocaml_versions:
     # Test different versions of OCaml
-    name: Opam OCaml versions
+    name: Install OCaml versions
 
-    # Only if in pull request
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
     needs:
-      - quick_tests
+      - tests_ubuntu
 
     strategy:
       matrix:
@@ -462,14 +393,13 @@ jobs:
       - name: Install
         run: opam install .
 
-  opam_ocaml_versions_tests:
-    name: Complete tests
+  tests_ocaml_versions:
+    name: OCaml versions tests
 
-    # Only if in pull request
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
     needs:
-      - opam_install_ocaml_versions
+      - install_ocaml_versions
 
     strategy:
       matrix:
@@ -507,3 +437,144 @@ jobs:
 
       - name: Run non regression tests
         run: opam exec -- rsc/extra/non_regression.sh
+
+
+################################################################################
+# Upload
+################################################################################
+  upload_ubuntu:
+    name: Ubuntu upload
+
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+
+    needs:
+      - tests_ubuntu
+
+    strategy:
+      matrix:
+        # Setup the main ocaml version and os to test
+        ocaml-version:
+          - 4.10.0
+        os:
+          - ubuntu-latest
+        cache-name:
+          - opam-all
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Retrieve opam cache
+        uses: actions/cache@v2
+        id: cache-opam
+        with:
+          path: ~/.opam
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+
+      - name: Use OCaml ${{ matrix.ocaml-version }}
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: ${{ matrix.ocaml-version }}
+
+      - name: Get version and path
+        id: get_version_path
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+        run: |
+          echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
+          echo "::set-output name=path::$(opam var bin)"
+
+      # Upload Alt-Ergo binary if actions is triggered on next or in a PR
+      - name: Upload Alt-Ergo binary
+        uses: actions/upload-artifact@v2
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+        with:
+          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
+          path: "${{ steps.get_version_path.outputs.path }}/alt-ergo"
+
+  upload_windows:
+    name: Upload Windows binary
+
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+
+    needs:
+      - install_windows
+
+    strategy:
+      matrix:
+        # Setup the main ocaml version to test
+        ocaml-version:
+          - 4.10.0
+        os:
+          - windows-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Retrieve opam cache
+        uses: actions/cache@v2
+        id: cache-opam
+        with:
+          path: ~/.opam
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+
+      - name: Use OCaml ${{ matrix.ocaml-version }}
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: ${{ matrix.ocaml-version }}
+
+      - name: Get version and path
+        id: get_version_path
+        run: |
+          echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
+          echo "::set-output name=path::$(opam var bin)"
+
+      - name: Upload Alt-Ergo binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
+          path: "${{ steps.get_version_path.outputs.path }}\alt-ergo"
+
+
+  upload_macos:
+    # Test to install all package on mac with opam
+    name: Opam MacOS
+
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+
+    needs:
+      - install_macos
+
+    strategy:
+      matrix:
+        # Setup the main ocaml version to test
+        ocaml-version:
+          - 4.10.0
+        os:
+          - macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Retrieve opam cache
+        uses: actions/cache@v2
+        id: cache-opam
+        with:
+          path: ~/.opam
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+
+      - name: Use OCaml ${{ matrix.ocaml-version }}
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: ${{ matrix.ocaml-version }}
+
+      - name: Get version and path
+        id: get_version_path
+        run: |
+          echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
+          echo "::set-output name=path::$(opam var bin)"
+
+      # Upload Alt-Ergo binary if actions is triggered on next or in a PR
+      - name: Upload Alt-Ergo binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
+          path: "${{ steps.get_version_path.outputs.path }}/alt-ergo"
