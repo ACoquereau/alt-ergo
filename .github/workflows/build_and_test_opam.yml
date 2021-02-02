@@ -61,6 +61,25 @@ jobs:
       - name: Install
         run: opam install .
 
+      - name: Get version and path
+        id: get_version_path
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
+        run: |
+          echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
+          echo "::set-output name=path::$(opam exec -- which alt-ergo)"
+
+      # Upload Alt-Ergo binary if actions is triggered on next or in a PR
+      - name: Upload Alt-Ergo binary
+        uses: actions/upload-artifact@v2
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
+        with:
+          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
+          path: ${{ steps.get_version_path.outputs.path }}
+
+
+
+
+
   quick_tests:
     name: Quick tests
 
