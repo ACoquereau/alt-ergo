@@ -54,7 +54,8 @@ jobs:
 
       - name: Upload ocaml documentation
         uses: actions/upload-artifact@v2
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+
         with:
           name: ocaml_doc
           path: _build/default/_doc/_html/
@@ -64,8 +65,8 @@ jobs:
     name: Sphinx documentation
     # We only run this if the ocaml documentation build is successful
     needs: ocaml_docs
-    # Sphinx documentation is only builded if a PR is open
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next'
+    # Sphinx documentation is only builded if a PR is open or when it's pushed on next or main
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
