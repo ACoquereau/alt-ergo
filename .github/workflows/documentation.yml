@@ -54,6 +54,7 @@ jobs:
 
       - name: Upload ocaml documentation
         uses: actions/upload-artifact@v2
+        if: github.event_name == 'pull_request'
         with:
           name: ocaml_doc
           path: _build/default/_doc/_html/
