@@ -76,10 +76,6 @@ jobs:
           name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
           path: ${{ steps.get_version_path.outputs.path }}
 
-
-
-
-
   quick_tests:
     name: Quick tests
 
@@ -139,7 +135,7 @@ jobs:
           - windows-latest
           - macos-latest
         cache-name:
-          - opam-os
+          - opam-os2
 
     runs-on: ${{ matrix.os }}
 
@@ -204,7 +200,7 @@ jobs:
           - windows-latest
           - macos-latest
         cache-name:
-          - opam-os
+          - opam-os2
 
     runs-on: ${{ matrix.os }}
 
@@ -223,6 +219,29 @@ jobs:
         uses: avsm/setup-ocaml@v1
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
+
+      - name: Set git user
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions-bot@users.noreply.github.com
+
+      - name: Pin no actio
+        run: opam pin add . -y --no-action
+
+      - name: Install depext
+        run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
+        if: steps.cache-opam.outputs.cache-hit != 'true'
+
+      - name: Install deps
+        run: opam install -y ./*.opam --deps-only --with-test
+        if: steps.cache-opam.outputs.cache-hit != 'true'
+
+      - name: Fixup
+        run: opam upgrade --fixup
+        if: steps.cache-opam.outputs.cache-hit == 'true'
+
+      - name: Install
+        run: opam install .
 
       - name: Convert non-regression script to dos
         run: |
