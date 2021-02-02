@@ -657,7 +657,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
-          path: "${{ steps.get_version_path.outputs.path }}\\alt-ergo"
+          path: "${{ steps.get_version_path.outputs.path }}/alt-ergo"
         if: github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
 
       - name: Convert non-regression script to dos
