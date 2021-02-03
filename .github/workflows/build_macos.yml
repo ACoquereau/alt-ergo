@@ -6,20 +6,15 @@ on:
       - next
       - main
 
+env:
+  OCAML_DEFAULT_VERSION: 4.10.0
+
 jobs:
   install_macos:
     # Test to install all package on mac with opam
     name: Install MacOS
 
-    strategy:
-      matrix:
-        # Setup the main ocaml version to test
-        ocaml-version:
-          - 4.10.0
-        os:
-          - macos-latest
-
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
@@ -30,12 +25,12 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ env.OCAML_DEFAULT_VERSION }}-${{ hashFiles('*.opam') }}
 
-      - name: Use OCaml ${{ matrix.ocaml-version }}
+      - name: Use OCaml ${{ env.OCAML_DEFAULT_VERSION }}
         uses: avsm/setup-ocaml@v1
         with:
-          ocaml-version: ${{ matrix.ocaml-version }}
+          ocaml-version: ${{ env.OCAML_DEFAULT_VERSION }}
 
       - name: Set git user
         run: |
@@ -66,15 +61,7 @@ jobs:
     needs:
       - install_macos
 
-    strategy:
-      matrix:
-        # Setup the main ocaml version to test
-        ocaml-version:
-          - 4.10.0
-        os:
-          - macos-latest
-
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
@@ -85,12 +72,12 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ env.OCAML_DEFAULT_VERSION }}-${{ hashFiles('*.opam') }}
 
-      - name: Use OCaml ${{ matrix.ocaml-version }}
+      - name: Use OCaml ${{ env.OCAML_DEFAULT_VERSION }}
         uses: avsm/setup-ocaml@v1
         with:
-          ocaml-version: ${{ matrix.ocaml-version }}
+          ocaml-version: ${{ env.OCAML_DEFAULT_VERSION }}
 
       - name: Run non regression tests
         run: opam exec -- rsc/extra/non_regression.sh
@@ -103,15 +90,7 @@ jobs:
     needs:
       - tests_macos
 
-    strategy:
-      matrix:
-        # Setup the main ocaml version to test
-        ocaml-version:
-          - 4.10.0
-        os:
-          - macos-latest
-
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
@@ -122,12 +101,12 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ env.OCAML_DEFAULT_VERSION }}-${{ hashFiles('*.opam') }}
 
-      - name: Use OCaml ${{ matrix.ocaml-version }}
+      - name: Use OCaml ${{ env.OCAML_DEFAULT_VERSION }}
         uses: avsm/setup-ocaml@v1
         with:
-          ocaml-version: ${{ matrix.ocaml-version }}
+          ocaml-version: ${{ env.OCAML_DEFAULT_VERSION }}
 
       - name: Get version and path
         id: get_version_path
@@ -139,5 +118,5 @@ jobs:
       - name: Upload Alt-Ergo binary
         uses: actions/upload-artifact@v2
         with:
-          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ matrix.ocaml-version }}
+          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ env.OCAML_DEFAULT_VERSION }}
           path: "${{ steps.get_version_path.outputs.path }}/alt-ergo"

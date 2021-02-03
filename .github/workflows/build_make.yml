@@ -4,6 +4,9 @@ name: Build Make
 # When a PR is open we do more test such as test more make rules
 on: [push,pull_request]
 
+env:
+  OCAML_DEFAULT_VERSION: 4.10.0
+
 jobs:
   make_all:
     # Basic test to check if the project build with make.
@@ -12,15 +15,10 @@ jobs:
 
     strategy:
       matrix:
-        # Setup the main ocaml version and os to test
-        ocaml-version:
-          - 4.10.0
-        os:
-          - ubuntu-latest
         cache-name:
           - make-all
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -31,12 +29,12 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ env.OCAML_DEFAULT_VERSION }}-${{ hashFiles('*.opam') }}
 
-      - name: Use OCaml ${{ matrix.ocaml-version }}
+      - name: Use OCaml ${{ env.OCAML_DEFAULT_VERSION }}
         uses: avsm/setup-ocaml@v1
         with:
-          ocaml-version: ${{ matrix.ocaml-version }}
+          ocaml-version: ${{ env.OCAML_DEFAULT_VERSION }}
 
       - name: Set git user
         run: |
@@ -70,17 +68,12 @@ jobs:
 
     strategy:
       matrix:
-        # Setup the main ocaml version and os to test
-        ocaml-version:
-          - 4.10.0
-        os:
-          - ubuntu-latest
         cache-name:
           - make-release
 
     needs: make_all
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -91,12 +84,12 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ env.OCAML_DEFAULT_VERSION }}-${{ hashFiles('*.opam') }}
 
-      - name: Use OCaml ${{ matrix.ocaml-version }}
+      - name: Use OCaml ${{ env.OCAML_DEFAULT_VERSION }}
         uses: avsm/setup-ocaml@v1
         with:
-          ocaml-version: ${{ matrix.ocaml-version }}
+          ocaml-version: ${{ env.OCAML_DEFAULT_VERSION }}
 
       - name: Set git user
         run: |
@@ -145,15 +138,10 @@ jobs:
 
     strategy:
       matrix:
-        # Setup the main ocaml version and os to test
-        ocaml-version:
-          - 4.10.0
-        os:
-          - ubuntu-latest
         cache-name:
           - make-install
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -164,12 +152,12 @@ jobs:
         id: cache-opam
         with:
           path: ~/.opam
-          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ matrix.ocaml-version }}-${{ hashFiles('*.opam') }}
+          key: v1-${{ runner.os }}-alt-ergo-${{ matrix.cache-name }}-${{ env.OCAML_DEFAULT_VERSION }}-${{ hashFiles('*.opam') }}
 
-      - name: Use OCaml ${{ matrix.ocaml-version }}
+      - name: Use OCaml ${{ env.OCAML_DEFAULT_VERSION }}
         uses: avsm/setup-ocaml@v1
         with:
-          ocaml-version: ${{ matrix.ocaml-version }}
+          ocaml-version: ${{ env.OCAML_DEFAULT_VERSION }}
 
       - name: Set git user
         run: |
