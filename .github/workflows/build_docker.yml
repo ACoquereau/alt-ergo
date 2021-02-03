@@ -16,6 +16,10 @@ jobs:
 
     steps:
       - run: sudo chmod a+wx .
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - run: opam switch create . ocaml-system
 
       - run: ls
