@@ -13,13 +13,11 @@ jobs:
 
     container:
       image: ocamlpro/ocaml:4.10
-      env:
-        OPAMROOT: /home/ocaml/.opam
-      options: --user ocaml --workdir /home/ocaml
 
     steps:
       # - run: export OPAMROOT=/home/ocaml/.opam
       # - run: sudo ln -s /home/ocaml/.opam /github/home/
+      - run: sudo chmod a+wx .
       - run: opam switch create . ocaml-system
 
       - name: Opam pin install
