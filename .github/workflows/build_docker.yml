@@ -20,19 +20,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - run: opam switch create alt-ergo ocaml-system
+      - run: opam switch create . ocaml-system --deps-only # Création du switch + installation des déps
+      - run: opam install . # Compilation + installation des paquets locaux
 
-      - name: Pin no actio
-        run: opam pin add . -y --no-action
+      # - run: opam switch create alt-ergo ocaml-system
 
-      - name: Install depext
-        run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
+      # - name: Pin no actio
+      #   run: opam pin add . -y --no-action
 
-      - name: Install deps
-        run: opam install -y ./*.opam --deps-only --with-test
+      # - name: Install depext
+      #   run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
 
-      - name: install
-        run: opam install .
+      # - name: Install deps
+      #   run: opam install -y ./*.opam --deps-only --with-test
+
+      # - name: install
+      #   run: opam install .
 
   # test_windows:
   #   name: test Windows
