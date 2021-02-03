@@ -20,7 +20,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - run: opam switch create . ocaml-system
+      - run: opam switch create alt-ergo ocaml-system
 
       - name: Pin no actio
         run: opam pin add . -y --no-action
