@@ -20,6 +20,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Retrieve opam cache
+        uses: actions/cache@v2
+        id: cache-opam
+        with:
+          path: _opam
+          key: v1-test-cache-opam
+
       - run: opam switch create . ocaml-system --deps-only # Création du switch + installation des déps
       - run: opam install . # Compilation + installation des paquets locaux
 
