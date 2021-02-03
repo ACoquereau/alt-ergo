@@ -1,0 +1,81 @@
+name: Build ocp Docker
+
+on: [push]
+
+env:
+  OCAML_DEFAULT_VERSION: 4.10.0
+
+jobs:
+  test:
+    name: test opam
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: ocamlpro/ocaml:4.10
+      env:
+        OPAMROOT: /home/ocaml/.opam
+      options: --user ocaml --workdir /home/ocaml
+
+    steps:
+      # - run: export OPAMROOT=/home/ocaml/.opam
+      # - run: sudo ln -s /home/ocaml/.opam /github/home/
+      - run: opam switch create . ocaml-system
+
+      - name: Opam pin install
+        run: opam pin add . -y
+
+  # test_windows:
+  #   name: test Windows
+
+  #   runs-on: windows-latest
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+
+  #     - name: Use OCaml ${{ env.OCAML_DEFAULT_VERSION }}
+  #       uses: avsm/setup-ocaml@v1
+  #       with:
+  #         ocaml-version: ${{ env.OCAML_DEFAULT_VERSION }}
+
+  #     - name: Set git user
+  #       run: |
+  #         git config --global user.name github-actions
+  #         git config --global user.email github-actions-bot@users.noreply.github.com
+
+  #     - name: Pin no actio
+  #       run: opam pin add . -y --no-action
+
+  #     - name: Install depext
+  #       run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
+  #       if: steps.cache-opam.outputs.cache-hit != 'true'
+
+  #     - name: Install deps
+  #       run: opam install -y ./*.opam --deps-only --with-test
+  #       if: steps.cache-opam.outputs.cache-hit != 'true'
+
+  #     - name: Fixup
+  #       run: opam upgrade --fixup
+  #       if: steps.cache-opam.outputs.cache-hit == 'true'
+
+  #     - name: Convert non-regression script to dos
+  #       run: |
+  #         dos2unix configure.sh
+  #         dos2unix Makefile
+
+  #     - name: Install
+  #       run: |
+  #         opam exec -- ./configure --static alt-ergo
+  #         opam exec -- make alt-ergo
+
+  #     - name: Get version and path
+  #       id: get_version_path
+  #       run: |
+  #         echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
+
+  #     - name: Upload Alt-Ergo binary
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ env.OCAML_DEFAULT_VERSION }}
+  #         path: "_build/default/src/bin/text/Main_text.exe"
