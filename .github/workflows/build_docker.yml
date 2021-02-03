@@ -19,6 +19,7 @@ jobs:
       - run: opam switch create . ocaml-system
 
       - run: ls
+      - run: opam var bin
       - name: Opam pin install
         run: opam pin add . -y
 
