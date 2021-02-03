@@ -15,11 +15,10 @@ jobs:
       image: ocamlpro/ocaml:4.10
 
     steps:
-      # - run: export OPAMROOT=/home/ocaml/.opam
-      # - run: sudo ln -s /home/ocaml/.opam /github/home/
       - run: sudo chmod a+wx .
       - run: opam switch create . ocaml-system
 
+      - run: ls
       - name: Opam pin install
         run: opam pin add . -y
 
