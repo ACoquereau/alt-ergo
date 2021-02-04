@@ -29,8 +29,23 @@ jobs:
         id: cache-opam
         with:
           path: ${{ steps.get_path.outputs.path }}/_opam
-          key: v1-test-cache-opam
+          key: v1-docker-alt-ergo-${{ env.OCAML_DEFAULT_VERSION }}-${{ hashFiles('*.opam') }}
 
       - run: opam switch create . ocaml-system --deps-only # Création du switch + installation des déps
 
-      - run: opam install . # Compilation + installation des paquets locaux
+      - run: OPAMCLI=2.0 opam exec -- ./configure --static
+      - run: opam exec -- make
+      - run: opam exec -- make install
+
+      - name: Get version and path
+        id: get_version_path
+        run: |
+          echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
+          echo "::set-output name=path::$(opam var bin)"
+
+      # Upload Alt-Ergo binary if actions is triggered on next or in a PR
+      - name: Upload Alt-Ergo binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-linux-${{ env.OCAML_DEFAULT_VERSION }}
+          path: "${{ steps.get_version_path.outputs.path }}/alt-ergo"
