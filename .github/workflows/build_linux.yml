@@ -49,3 +49,63 @@ jobs:
         with:
           name: alt-ergo-${{ steps.get_version_path.outputs.version }}-linux-${{ env.OCAML_DEFAULT_VERSION }}
           path: "${{ steps.get_version_path.outputs.path }}/alt-ergo"
+
+
+
+  static_ubuntu:
+    # Basic test to check if the project build with opam.
+    # If this test fails, no more building test with opam and non-regression are done
+    name: Install Ubuntu
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Use OCaml ${{ env.OCAML_DEFAULT_VERSION }}
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: ${{ env.OCAML_DEFAULT_VERSION }}
+
+      - name: Set git user
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions-bot@users.noreply.github.com
+
+      - name: Pin no action
+        run: opam pin add . -y --no-action
+
+      - name: Install depext
+        run: opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
+        # if: steps.cache-opam.outputs.cache-hit != 'true'
+
+      - name: Install deps
+        run: opam install -y ./*.opam --deps-only --with-test
+        if: steps.cache-opam.outputs.cache-hit != 'true'
+
+      - name: Fixup
+        run: opam upgrade --fixup
+        if: steps.cache-opam.outputs.cache-hit == 'true'
+
+      - name: configure
+        run: opam exec -- ./configure --static
+
+      - name: make
+        run: opam exec -- make
+
+      - name: install
+        run: opam exec -- make install
+
+      - name: Get version and path
+        id: get_version_path
+        run: |
+          echo "::set-output name=version::$(opam exec -- alt-ergo --version)"
+          echo "::set-output name=path::$(opam var bin)"
+
+      # Upload Alt-Ergo binary if actions is triggered on next or in a PR
+      - name: Upload Alt-Ergo binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: alt-ergo-${{ steps.get_version_path.outputs.version }}-${{ runner.os }}-${{ env.OCAML_DEFAULT_VERSION }}
+          path: "${{ steps.get_version_path.outputs.path }}/alt-ergo"

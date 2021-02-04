@@ -148,8 +148,15 @@ let () =
   let () = Format.printf "Generating file %s..." f in
   let ch = open_out f in
   let fmt = Format.formatter_of_out_channel ch in
-  let () = Format.fprintf fmt {|(-linkall %s)@.|}
-      (if !static then "-cclib -static" else "")
+  let () = Format.fprintf fmt {|  %s@.|}
+      (if !static then
+         "( -cclib -Wl,-Bstatic \
+          -cclib -lunix \
+          -cclib -lz \
+          -cclib -lgmp \
+          -cclib -Wl,-Bdynamic \
+          -cclib -static-libgcc)"
+       else "(-linkall)")
   in
   let () = close_out ch in
   let () = Format.printf "done.@." in
