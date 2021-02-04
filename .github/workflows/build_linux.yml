@@ -32,4 +32,5 @@ jobs:
           key: v1-test-cache-opam
 
       - run: opam switch create . ocaml-system --deps-only # Création du switch + installation des déps
+
       - run: opam install . # Compilation + installation des paquets locaux
