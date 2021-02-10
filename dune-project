@@ -82,6 +82,7 @@ See more details on http://alt-ergo.ocamlpro.com/"
   (camlzip (>= 1.07))
   menhir
   stdlib-shims
+  seq
   (odoc :with-doc)
  )
 )
@@ -109,6 +110,7 @@ See more details on http://alt-ergo.ocamlpro.com/"
   zarith
   seq
   stdlib-shims
+  menhir
   (odoc :with-doc)
  )
 )
