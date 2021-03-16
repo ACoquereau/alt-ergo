@@ -1,12 +1,10 @@
 name: Build Javascript
 
 # this worflow try to build and test the javascript version of Alt-Ergo
-# It only runs on `next` or `main` branch
-on:
-  push:
-    branches:
-      - next
-      - main
+# On `next` or `main` branches it upload artifacts with nodejs compatible
+# js code and the webworker of Alt-Ergo
+
+on: [push,pull_request]
 
 env:
   OCAML_DEFAULT_VERSION: 4.10.0
@@ -19,10 +17,66 @@ env:
   #   OPAMWITHTEST: true
 
 jobs:
-  compile_and_test_js:
-    # check if the project build in js.
+  alt_ergo_js_package:
+    # check if the alt-ergo-js package builds.
     # If this test fails, no tests are done
+    name: Compile alt-ergo-js package
+
+    runs-on: ubuntu-latest
+
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+
+    steps:
+      # Checkout the code of the current branch
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Retrieve the opam cache with unique key
+      # A new cache is created/used if the `.opam` files changes or
+      # if we use another ocaml version
+      # This action only retrieve de .opam/ directory
+      - name: Retrieve opam cache
+        uses: actions/cache@v2
+        id: cache-opam
+        with:
+          path: ~/.opam
+          key: v1-${{ runner.os }}-alt-ergo-js-${{ env.OCAML_DEFAULT_VERSION }}-${{ hashFiles('*.opam') }}
+
+      # Get an OCaml environment with opam installed and the proper ocaml version
+      # opam will used opam cache environment if retrieved
+      - name: Use OCaml ${{ env.OCAML_DEFAULT_VERSION }}
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: ${{ env.OCAML_DEFAULT_VERSION }}
+
+      # Pin the packages, this is needed for opam depext
+      # remove this step when opam 2.1 will be used
+      - name: Pin no action
+        run: opam pin add . --no-action
+
+      # Install external dependencies
+      # remove this step when opam 2.1 will be used
+      - name: Install depext
+        run: opam depext alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo alt-ergo-js
+
+      # Install dependencies
+      - name: Install deps
+        run: opam install ./*.opam --deps-only --with-test
+
+      # Build and install with opam
+      - name: Install
+        run: opam install .
+
+
+  compile_and_test_js:
+    # check if the project build in js with the makefile rules.
+    # If the build succed it upload javascript files
     name: Compile AE with JsoO and test it with NodeJs
+
+    if: github.ref == 'refs/heads/next' || github.ref == 'refs/heads/main'
+
+    needs:
+      - alt_ergo_js_package
 
     runs-on: ubuntu-latest
 
@@ -57,15 +111,11 @@ jobs:
       # Install external dependencies
       # remove this step when opam 2.1 will be used
       - name: Install depext
-        run: opam depext alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
+        run: opam depext alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo alt-ergo-js
 
       # Install dependencies
       - name: Install deps
         run: opam install ./*.opam --deps-only --with-test
-
-      # Add alt-ergo-js dependencies
-      - name: Install Js_of_ocaml and zarith_stubs_js
-        run: opam install js_of_ocaml zarith_stubs_js
 
       # Fix zarith version to 1.11 since 1.12 add features not implemented yet
       # in the stubs
@@ -73,8 +123,12 @@ jobs:
         run: opam install zarith.1.11
 
       # compile Alt-Ergo with Js_of_ocaml
-      - name: Make alt-ergo-js
+      - name: Make alt-ergo.js
         run: opam exec -- make js-node
+
+      # compile the Alt-Ergo webworker with Js_of_ocaml
+      - name: Make alt-ergo-worker.js
+        run: opam exec -- make js-worker
 
       # Use Node Js actions
       - uses: actions/setup-node@v2
@@ -85,7 +139,7 @@ jobs:
       - name: Run simple example with node
         run: opam exec -- node alt-ergo.js non-regression/valid/everything/f1.ae
 
-      # Upload Alt-Ergo.js an artifact
+      # Upload Alt-Ergo.js as an artifact
       # the artifact name contains the system is builded on and the ocaml
       # compiler version used
       - name: Upload alt-ergo.js
@@ -93,3 +147,12 @@ jobs:
         with:
           name: alt-ergo-js-${{ runner.os }}-${{ env.OCAML_DEFAULT_VERSION }}
           path: "alt-ergo.js"
+
+      # Upload Alt-Ergo-worker.js an artifact
+      # the artifact name contains the system is builded on and the ocaml
+      # compiler version used
+      - name: Upload alt-ergo-worker.js
+        uses: actions/upload-artifact@v2
+        with:
+          name: alt-ergo-worker-js-${{ runner.os }}-${{ env.OCAML_DEFAULT_VERSION }}
+          path: "alt-ergo-worker.js"
