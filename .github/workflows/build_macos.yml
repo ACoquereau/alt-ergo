@@ -62,7 +62,7 @@ jobs:
 
       # Install dependencies
       - name: Install deps
-        run: opam install  ./*.opam --deps-only --with-test
+        run: opam install  ./alt-ergo-lib.opam ./alt-ergo-parsers.opam ./alt-ergo.opam ./altgr-ergo.opam --deps-only --with-test
 
 
       # Build and install with opam

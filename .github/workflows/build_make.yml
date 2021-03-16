@@ -54,7 +54,7 @@ jobs:
 
       # Install dependencies
       - name: opam install deps
-        run: opam install ./*.opam --deps-only
+        run: opam install ./alt-ergo-lib.opam ./alt-ergo-parsers.opam ./alt-ergo.opam ./altgr-ergo.opam --deps-only
 
       # make use `dune build` which update .opam file if the dune-project is updated
       - name: Make
@@ -191,7 +191,7 @@ jobs:
       - name: Build
         run: |
           opam depext -y alt-ergo-lib alt-ergo-parsers alt-ergo altgr-ergo
-          opam install -y ./*.opam --deps-only
+          opam install -y ./alt-ergo-lib.opam ./alt-ergo-parsers.opam ./alt-ergo.opam ./altgr-ergo.opam --deps-only
           opam exec -- make
 
       # Install the package in opam files
